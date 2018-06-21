@@ -33,10 +33,9 @@ class Cell(cellular.Cell):
 '''
 
 
-class Player():
+class Puzzle():
 
-    def __init__(self, world):
-        self.ai = None
+    def __init__(self, puzzleSize):
         # alpha ... learning rate between 0-1 (0 means never update Q-values)
         # gamma ... discount factor between 0-1 (higher means the algorithm looks farther into the future - at 1 
         #           infinite rewards possible -> dont go to 1)
@@ -47,8 +46,17 @@ class Player():
         self.lastState = None
         self.lastAction = None
         self.solved = 0
-        self.world = world
-        self.world.setPlayer(self)
+        self.age = 0
+        self.puzzleSize = puzzleSize
+        # describes position of the empty cell (value = 0)
+        self.emptyCell = None
+        # list containing values describing which numbers are in which positions [pos] = value
+        # for size = 2, state[2] = c:
+        # a b
+        # c d
+        self.state = []
+        self.display = display.makeDisplay(self)
+        self.makeRandomPuzzle()
 
     # move the tile if that move is possible
     def moveTile(self, position):
@@ -66,13 +74,15 @@ class Player():
     # if this is not the first state after new puzzle created -> Q-learn(s,a,r,s')
     # choose an action and perform that action
     def update(self):
+        self.display.update()
+        self.age += 1
         # calculate the state of the surrounding cells (cat, cheese, wall, empty)
-        puzzleState = self.world.getState()
+        puzzleState = self.state
         # assign a reward of -1 by default
         reward = -1
 
         # observe the reward and update the Q-value
-        if self.world.isPuzzleSolved():
+        if self.isPuzzleSolved():
             self.solved += 1
             reward = 100
             if self.lastState is not None:
@@ -86,7 +96,7 @@ class Player():
             self.ai.learn(self.lastState, self.lastAction, reward, puzzleState)
 
         # get updated state (puzzle might have been recreated after being solved), choose a new action and execute it
-        puzzleState = self.world.getState()
+        puzzleState = self.state
         action = self.ai.chooseAction(puzzleState)
         self.lastState = puzzleState
         self.lastAction = action
@@ -94,103 +104,61 @@ class Player():
         # move chosen tile, if it can not be moved do nothing
         self.moveTile(action)
 
+    def isPuzzleSolved(self):
+        return False
+        # TODO do calc based on self.state and puzzle size
 
-class World:
-        # list containing values describing which numbers are in which positions [pos] = value
-        # for size = 3, state[6] = g
-        # a b c
-        # d e f
-        # g h j
-        state = []
-        # describes position of the empty cell (value = 0)
-        emptyCell = None
+    # creates new random puzzle with world puzzleSize and sets age to 0
+    def makeRandomPuzzle(self):
+        # TODO new puzzle
+        self.age = 0
 
-        # create random puzzle on init
-        def __init__(self, puzzleSize=3):
-            self.display = display.makeDisplay(self)
-            self.puzzleSize = puzzleSize
-            self.solved = None
-            self.reset()
+    def getCellValue(self, x, y):
+        return self.state[self.puzzleSize * y + x]
 
-        def getState(self):
-            return self.state
-
-        def isPuzzleSolved(self):
-            return False
-            # TODO do calc based on self.state and puzzle size
-
-        def getCellValue(self, x, y):
-            return self.state[self.puzzleSize * y + x]
-
-        def getCellValueByIndex(self, position):
-            return self.state[position]
-
-        # creates new random puzzle with world puzzleSize and sets age to 0
-        def reset(self):
-            # TODO new puzzle
-            self.age = 0
-
-        # calls update on player and then updates score and redraws screen
-        def update(self, solved=None):
-            oldState = self.getState()
-            self.player.update()
-            if oldState != self.getState():
-                pass
-                # TODO redraw
-                # self.display.redrawCell(oldState.x, oldState.y)
-            # self.display.redrawCell(a.cell.x, a.cell.y)
-            if (solved):
-                self.solved = solved
-            self.display.update()
-            self.age += 1
-
-        def setPlayer(self, player):
-            self.player = player
+    def getCellValueByIndex(self, position):
+        return self.state[position]
 
 
 # ----------------------------------
 # start learning
 # ----------------------------------
 
-world = World(puzzleSize=puzzleSize)
-world.age = 0
-player = Player(world)
-
+puzzle = Puzzle(puzzleSize=puzzleSize)
 
 # how many time steps to pre train
-steps = 10000
+learningSteps = 10000
 
-epsilonX = (0, steps*0.7)  # for how many time steps epsilon will be > 0, value experimental
+# learning factor
+epsilonX = (0, learningSteps * 0.7)  # for how many time steps epsilon will be > 0, value experimental
 epsilonY = (0.1, 0)  # TODO why does the mouse still learn with an exploration factor of 0?
 # decay rate for epsilon so it hits 0 after epsilonX[1] time steps
 epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 
-endAge = world.age + steps
-
 startTime = datetime.now()
 print(startTime)
 
-# pre train the player till endAge
-while world.age < endAge:
-    # calls update on player (do action and learn) and then updates score and redraws screen
-    world.update()
+# pre train the player
+while puzzle.age < learningSteps:
+    # calls update on puzzle (do action and learn) and then updates score and redraws screen
+    puzzle.update()
 
     # every 100 time steps, decay epsilon
-    if world.age % 100 == 0:
-        # this gradually decreases epsilon from epsilony[0] to epsilony[1] over the course of epsilonx[0] to [1]
-        # -> at epsilonx[1] epsilon will reach epsilony[1] and stay there
-        player.ai.epsilon = (epsilonY[0] if world.age < epsilonX[0] else
-                            epsilonY[1] if world.age > epsilonX[1] else
-                            epsilonM * (world.age - epsilonX[0]) + epsilonY[0])
-        # alternatively just multiply by some factor... harder to set right i guess
-        # player.ai.epsilon *= 0.9995
+    if puzzle.age % 100 == 0:
+        # this gradually decreases epsilon from epsilonY[0] to epsilonY[1] over the course of epsilonX[0] to [1]
+        # -> at epsilonX[1] epsilon will reach epsilonY[1] and stay there
+        puzzle.ai.epsilon = (epsilonY[0] if puzzle.age < epsilonX[0] else
+                            epsilonY[1] if puzzle.age > epsilonX[1] else
+                            epsilonM * (puzzle.age - epsilonX[0]) + epsilonY[0])
+        # alternatively just multiply by some factor... harder to set right I guess
+        # puzzle.ai.epsilon *= 0.9995
 
     # every 10.000 steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next 10.000 steps
-    if world.age % 10000 == 0:
-        averageStepsPerPuzzle = 10000 / player.solved
+    if puzzle.age % 10000 == 0:
+        averageStepsPerPuzzle = 10000 / puzzle.solved
         print "Age: {:d}, e: {:0.3f}, Solved: {:d}, average steps per puzzle: {:f}%" \
-            .format(world.age, player.ai.epsilon, player.solved, averageStepsPerPuzzle)
-        player.solved = 0
+            .format(puzzle.age, puzzle.ai.epsilon, puzzle.solved, averageStepsPerPuzzle)
+        puzzle.solved = 0
 
 
 # ----------------------------------
@@ -206,7 +174,7 @@ print("total time: ", divmod(totalTime.days * 86400 + totalTime.seconds, 60))
 # PAGEDOWN to reverse the effect
 # SPACE to pause
 
-world.display.activate(size=30)
-world.display.delay = 1
+puzzle.display.activate(size=30)
+puzzle.display.delay = 1
 while 1:
-    world.update(player.solved)
+    puzzle.update()
