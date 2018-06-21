@@ -1,11 +1,19 @@
 import random
 import cellular
+from datetime import datetime
 
 import qlearn as learner
 
-puzzleSize = 3  # Size 3 means 3x3 puzzle
-puzzleActionSize = puzzleSize ** 2 # number of possible actions given puzzleSize
-puzzleCells = range(puzzleActionSize) # list of actions ( = tiles ) in the puzzle
+# Size 3 means 3x3 puzzle
+puzzleSize = 3
+# number of possible actions given puzzleSize
+puzzleActionSize = puzzleSize ** 2
+# list of actions ( = tiles ) in the puzzle
+# for size = 3 -> actionSize = 9:  looks like [0,1,2,...,8] which describes the Cell to move
+# 0 1 2
+# 3 4 5
+# 6 7 8
+puzzleCells = range(puzzleActionSize)
 
 
 # creates random puzzle based on puzzleSize
@@ -14,11 +22,14 @@ def createRandomPuzzle():
     # TODO
 
 
+# 0 ... empty cell
+# x ... cell that contains number x
 class Cell(cellular.Cell):
-    value = -1
+    value = 0
 
-    def setValue(self, int):
-        value = int
+    def setValue(self, val):
+        self.value = val
+
 
 class Player(cellular.Agent):
 
@@ -90,6 +101,9 @@ epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 
 endAge = world.age + steps
 
+startTime = datetime.now()
+print(startTime)
+
 # pre train the player till endAge
 while world.age < endAge:
     # calls update on player (do action and learn) and then updates score and redraws screen
@@ -117,7 +131,11 @@ while world.age < endAge:
 # show off
 # ----------------------------------
 
-# after pre training - show off the mouse ai (while still training, but slower because it has to render now)
+endTime = datetime.now()
+totalTime = endTime - startTime
+print("total time: ", divmod(totalTime.days * 86400 + totalTime.seconds, 60))
+
+# after pre training - show off the player ai (while still training, but slower because it has to render now)
 # PAGEUP to render less and thus learn faster
 # PAGEDOWN to reverse the effect
 # SPACE to pause

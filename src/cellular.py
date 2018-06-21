@@ -6,17 +6,18 @@ import time
 class Cell:
     # returns list of cells around x,y position of the cell
     def __getattr__(self, key):
-        # TODO is this calculated every time that cell.neighbour is called? if so why is it stored in __dict__ then?
+        # __getattr__ is called if the neighbour variable can not be found in the dict
         if key == "neighbour":
             pts = [self.world.getPointInDirection(self.x, self.y, dir) for dir in range(self.world.directions)]
-            ns = tuple([self.world.grid[y][x] for (x,y) in pts])
-            # TODO see above (does this even do anything?)
-            #self.__dict__["neighbour"] = ns
+            ns = tuple([self.world.grid[y][x] for (x, y) in pts])
+            # after the first call the neighbour variable is defined for that specific Cell object in its dict
+            self.__dict__["neighbour"] = ns
             return ns
         raise AttributeError(key)
 
 
 class Agent:
+    '''
     def __setattr__(self, key, val):
         if key == 'cell':
             old = self.__dict__.get(key, None)
@@ -25,8 +26,9 @@ class Agent:
             if val is not None:
                 val.agents.append(self)
         self.__dict__[key] = val
+    '''
 
-    # move to target if it is not a wall
+    # move the tile if that move is possible
     def moveTile(self, position):
         target = self.cell.neighbour[position]
         # if target is a wall -> do not move and return false
@@ -60,6 +62,8 @@ class Agent:
 class World:
 
     state = []
+    # describes position of the empty cell
+    emptyCell = None
 
     # create random puzzle on init
     def __init__(self, cell=None, puzzleSize=3):
@@ -80,6 +84,9 @@ class World:
 
     def getCell(self, x, y):
         return self.grid[y][x]
+
+    def getCellByIndex(self, position):
+        pass
 
     def getWrappedCell(self, x, y):
         return self.grid[y % self.height][x % self.width]
