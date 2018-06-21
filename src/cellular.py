@@ -1,6 +1,7 @@
 import random
 import sys
 import time
+import numpy as np
 
 
 class Cell:
@@ -60,16 +61,17 @@ class Agent:
 
 
 class World:
-
+    # list containing values describing which numbers are in which positions [pos] = value
+    # for size = 3, state[6] = g
+    # a b c
+    # d e f
+    # g h j
     state = []
-    # describes position of the empty cell
+    # describes position of the empty cell (value = 0)
     emptyCell = None
 
     # create random puzzle on init
-    def __init__(self, cell=None, puzzleSize=3):
-        if cell is None:
-            cell = Cell
-        self.Cell = cell
+    def __init__(self, puzzleSize=3):
         self.display = makeDisplay(self)
         self.puzzleSize = puzzleSize
         self.solved = None
@@ -82,22 +84,24 @@ class World:
         return False
         # TODO do calc based on self.state and puzzle size
 
-    def getCell(self, x, y):
-        return self.grid[y][x]
+    def getCellValue(self, x, y):
+        return self.state[self.puzzleSize * y + x]
 
-    def getCellByIndex(self, position):
-        pass
+    def getCellValueByIndex(self, position):
+        return self.state[position]
 
+    '''
     def getWrappedCell(self, x, y):
         return self.grid[y % self.height][x % self.width]
+    '''
 
-    # creates new cells for each position in the world, empties list of agents and sets age to 0
+    # creates new random puzzle with world puzzleSize, empties list of agents and sets age to 0
     def reset(self):
-        self.grid = [[self.makeCell(i, j) for i in range(self.width)] for j in range(self.height)]
-        # self.dictBackup = [[{} for i in range(self.width)] for j in range(self.height)]
+        # TODO new puzzle
         self.agents = []
         self.age = 0
 
+    '''
     # creates new cell at x,y position
     def makeCell(self, x, y):
         c = self.Cell()
@@ -135,23 +139,24 @@ class World:
             line = lines[j]
             for i in range(min(fw, len(line))):
                 self.grid[starty + j][startx + i].setWallColour(line[i])
+    '''
 
-    # calls update on cat, mouse (and cheese) (change position and learn) and then updates score and redraws screen
-    def update(self, fed=None, eaten=None):
+    # calls update on player and then updates score and redraws screen
+    def update(self, solved = None):
         for a in self.agents:
-            oldCell = a.cell
+            oldState = self.getState()
             a.update()
-            if oldCell != a.cell:
-                self.display.redrawCell(oldCell.x, oldCell.y)
-            self.display.redrawCell(a.cell.x, a.cell.y)
-        # end else
-        if (fed):
-            self.fed = fed
-        if (eaten):
-            self.eaten = eaten
+            if oldState != self.getState():
+                pass
+                # TODO redraw
+                # self.display.redrawCell(oldState.x, oldState.y)
+            # self.display.redrawCell(a.cell.x, a.cell.y)
+        if (solved):
+            self.solved = solved
         self.display.update()
         self.age += 1
 
+    '''
     # returns x,y coordinates when going in direction dir
     # wraps around borders
     def getPointInDirection(self, x, y, dir):
@@ -183,29 +188,19 @@ class World:
             y2 -= self.height
 
         return (x2, y2)
+    '''
 
-    # adds an agent and gives them a position in the world
-    def addAgent(self, agent, x=None, y=None, cell=None, dir=None):
+    # adds an agent
+    def addAgent(self, agent):
         self.agents.append(agent)
-        if cell is not None:
-            x = cell.x
-            y = cell.y
-        if x is None:
-            x = random.randrange(self.width)
-        if y is None:
-            y = random.randrange(self.height)
-        if dir is None:
-            dir = random.randrange(self.directions)
-        agent.cell = self.grid[y][x]
-        agent.dir = dir
         agent.world = self
-
 
 # creates Display instance
 def makeDisplay(world):
     d = Display()
     d.world = world
     return d
+
 
 # default Display
 class PygameDisplay:
@@ -345,14 +340,13 @@ class PygameDisplay:
             filename = '%05d.bmp' % self.world.age
         pygame.image.save(self.screen, filename)
 
+
 # creates title
 def makeTitle(world):
     text = 'age: %d' % world.age
     extra = []
-    if world.fed:
-        extra.append('fed=%d' % world.fed)
-    if world.eaten:
-        extra.append('eaten=%d' % world.eaten)
+    if world.solved:
+        extra.append('solved=%d' % world.solved)
     if world.display.paused:
         extra.append('paused')
     if world.display.updateEvery != 1:
@@ -365,10 +359,8 @@ def makeTitle(world):
     return text
 
 
-
 try:
     import pygame
-
     Display = PygameDisplay
 except:
     print("ERROR: Failed creating PyGameDisplay!!")

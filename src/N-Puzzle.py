@@ -22,6 +22,7 @@ def createRandomPuzzle():
     # TODO
 
 
+'''
 # 0 ... empty cell
 # x ... cell that contains number x
 class Cell(cellular.Cell):
@@ -29,6 +30,7 @@ class Cell(cellular.Cell):
 
     def setValue(self, val):
         self.value = val
+'''
 
 
 class Player(cellular.Agent):
@@ -86,7 +88,7 @@ class Player(cellular.Agent):
 
 player = Player()
 
-world = cellular.World(Cell, puzzleSize=puzzleSize)
+world = cellular.World(puzzleSize=puzzleSize)
 world.age = 0
 world.addAgent(player)
 
