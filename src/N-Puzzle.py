@@ -1,5 +1,5 @@
 import random
-import cellular
+import display
 from datetime import datetime
 
 import qlearn as learner
@@ -33,9 +33,9 @@ class Cell(cellular.Cell):
 '''
 
 
-class Player(cellular.Agent):
+class Player():
 
-    def __init__(self):
+    def __init__(self, world):
         self.ai = None
         # alpha ... learning rate between 0-1 (0 means never update Q-values)
         # gamma ... discount factor between 0-1 (higher means the algorithm looks farther into the future - at 1 
@@ -47,6 +47,19 @@ class Player(cellular.Agent):
         self.lastState = None
         self.lastAction = None
         self.solved = 0
+        self.world = world
+        self.world.setPlayer(self)
+
+    # move the tile if that move is possible
+    def moveTile(self, position):
+        target = self.cell.neighbour[position]
+        # if target is a wall -> do not move and return false
+        if getattr(target, 'wall', False):
+            # print "hit a wall"
+            return False
+        # else move to target and return true
+        self.cell = target
+        return True
 
     # calc reward based on current state (-1 default, +100 puzzle solved) and
     # if puzzle solved -> create random new puzzle
@@ -82,15 +95,66 @@ class Player(cellular.Agent):
         self.moveTile(action)
 
 
+class World:
+        # list containing values describing which numbers are in which positions [pos] = value
+        # for size = 3, state[6] = g
+        # a b c
+        # d e f
+        # g h j
+        state = []
+        # describes position of the empty cell (value = 0)
+        emptyCell = None
+
+        # create random puzzle on init
+        def __init__(self, puzzleSize=3):
+            self.display = display.makeDisplay(self)
+            self.puzzleSize = puzzleSize
+            self.solved = None
+            self.reset()
+
+        def getState(self):
+            return self.state
+
+        def isPuzzleSolved(self):
+            return False
+            # TODO do calc based on self.state and puzzle size
+
+        def getCellValue(self, x, y):
+            return self.state[self.puzzleSize * y + x]
+
+        def getCellValueByIndex(self, position):
+            return self.state[position]
+
+        # creates new random puzzle with world puzzleSize and sets age to 0
+        def reset(self):
+            # TODO new puzzle
+            self.age = 0
+
+        # calls update on player and then updates score and redraws screen
+        def update(self, solved=None):
+            oldState = self.getState()
+            self.player.update()
+            if oldState != self.getState():
+                pass
+                # TODO redraw
+                # self.display.redrawCell(oldState.x, oldState.y)
+            # self.display.redrawCell(a.cell.x, a.cell.y)
+            if (solved):
+                self.solved = solved
+            self.display.update()
+            self.age += 1
+
+        def setPlayer(self, player):
+            self.player = player
+
+
 # ----------------------------------
 # start learning
 # ----------------------------------
 
-player = Player()
-
-world = cellular.World(puzzleSize=puzzleSize)
+world = World(puzzleSize=puzzleSize)
 world.age = 0
-world.addAgent(player)
+player = Player(world)
 
 
 # how many time steps to pre train
