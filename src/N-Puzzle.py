@@ -114,24 +114,9 @@ class Puzzle():
             curPosY = curPosTuple[1]
             curPosValue = self.state[curPosY][curPosX]
 
-            # TODO remove
-            #if(curPosValue == 0):
-            #    pass
-                #return False
-
             emptyCellPosTuple = self.emptyCellPos
             empPosX = emptyCellPosTuple[0]
             empPosY = emptyCellPosTuple[1]
-
-            # TODO remove
-            #if(curPosValue == 0):
-            #    print(curPosTuple)
-            #    print(self.neighbours[position])
-            #    print(self.emptyCellPos)
-            #    print(self.state)
-            #    print(self.prevState)
-            #    print(self.prevAction)
-            #    exit(-1)
 
             # swap values in self.state
             self.state[empPosY][empPosX] = curPosValue
@@ -153,16 +138,6 @@ class Puzzle():
     # if this is not the first state after new puzzle created -> Q-learn(s,a,r,s')
     # choose an action and perform that action
     def update(self):
-
-        #TODO remove
-        #emptyCellPosTuple = self.emptyCellPos
-        #empPosX = emptyCellPosTuple[0]
-        #empPosY = emptyCellPosTuple[1]
-        #if (not(self.state[empPosY][empPosX]==0)):
-        #    print("swaps: %d" %(self.movesDone))
-        #    print("emptyCellPos Value: %d" %(self.state[empPosY][empPosX]))
-
-
         # self.display.update()
         # calculate the state of the surrounding cells (cat, cheese, wall, empty)
         currentState = self.state
@@ -182,8 +157,15 @@ class Puzzle():
             print("Puzzle %d solved" % (self.solved))
             print("Moves done to reach the goal: %d" % (self.movesDone))
             print("non-Moves done: %d" % (self.actionsTaken - self.movesDone))
+            print("moves + non-moves = %d" %self.actionsTaken)
             self.movesDone = 0
             self.actionsTaken = 0
+
+            endTime = datetime.now()
+            totalTime = endTime - self.startTime
+            print("----------------------puzzle end: %s" % endTime)
+            # print("total time: %f" %((totalTime.days * 86400 + totalTime.seconds) / (60 * 1.0)))
+            print("----------------------total time: %f minutes" % (totalTime.total_seconds() / 60))
 
             reward = 100
             if self.lastState is not None:
@@ -193,9 +175,6 @@ class Puzzle():
             self.state = self.randomizer.makeRandomPuzzle()
             self.emptyCellPos = self.initEmptyCellPos()
 
-            endTime = datetime.now()
-            totalTime = endTime - self.startTime
-            print("total time: ", divmod(totalTime.days * 86400 + totalTime.seconds, 60))
             self.startTime = datetime.now()
 
             return
@@ -259,8 +238,8 @@ epsilonY = (0.35, 0)  # TODO why does the mouse still learn with an exploration 
 # decay rate for epsilon so it hits 0 after epsilonX[1] time steps
 epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 
-startTime = datetime.now()
-print(startTime)
+puzzle.startTime = datetime.now()
+print("----------------------puzzle start: %s" %puzzle.startTime)
 
 # pre train the player
 #while puzzle.age < learningSteps:
