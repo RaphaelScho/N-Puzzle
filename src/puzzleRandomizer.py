@@ -21,14 +21,14 @@ class Randomizer():
         if (not(self.isSolvable(self.puzzleSize, self.puzzleSize, self.emptyLocY + 1))):
             #print("wrong: ",self.boardParts)
             #print(self.emptyLocX, self.emptyLocY)
-            print(self.boardParts)
+            #print(self.boardParts)
             if ((self.emptyLocY == 0) & (self.emptyLocX <= 1)):
                 self.swapTiles(self.puzzleSize - 2, self.puzzleSize - 1, self.puzzleSize - 1, self.puzzleSize - 1)
             else:
                 self.swapTiles(0, 0, 1, 0) # swap [0,0] [1,0], means swap position 0 and 1
             self.calcEmptyLoc()
             self.isSolvable(self.puzzleSize, self.puzzleSize, self.emptyLocY + 1)
-            print(self.boardParts)
+            #print(self.boardParts)
         #print("fixed if broken: ", self.boardParts)
 
 
@@ -126,16 +126,16 @@ class Randomizer():
         # odd width
         if (width % 2 == 1):
             #print(self.sumInversions())
-            print("is solvable A: %s" %(inversions % 2 == 0))
+            #print("is solvable A: %s" %(inversions % 2 == 0))
             return (inversions % 2 == 0)
 
         # even width
         else:
             # empty on even row counted from the bottom
             if((height - emptyRow) % 2 == 1):
-                print("is solvable B: %s" % (inversions % 2 == 1))
+                #print("is solvable B: %s" % (inversions % 2 == 1))
                 return (inversions % 2 == 1)
             # empty on odd row counted from the bottom
             else:
-                print("is solvable C: %s" % (inversions % 2 == 0))
+                #print("is solvable C: %s" % (inversions % 2 == 0))
                 return (inversions % 2 == 0)

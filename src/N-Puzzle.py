@@ -50,6 +50,11 @@ class Puzzle():
         # create array equal to state, but with the expected solutions instead
         self.solution = self.initSolvedPosition()
         self.display = display.makeDisplay(self)
+        # init variables to calc rolling averages
+        self.rollLength = 10
+        self.rollPos = 0
+        self.timeList = []
+        self.movesList = []
 
     # create neighbours dict which has a list of neighbour-positions for each position
     def initNeighbours(self):
@@ -154,20 +159,37 @@ class Puzzle():
         # observe the reward and update the Q-value
         if self.isPuzzleSolved():
             self.solved += 1
-            print("Puzzle %d solved" % (self.solved))
-            print("Moves done to reach the goal: %d" % (self.movesDone))
-            print("non-Moves done: %d" % (self.actionsTaken - self.movesDone))
-            print("moves + non-moves = %d" %self.actionsTaken)
-            self.movesDone = 0
-            self.actionsTaken = 0
 
             endTime = datetime.now()
             totalTime = endTime - self.startTime
-            print("----------------------puzzle end: %s" % endTime)
-            # print("total time: %f" %((totalTime.days * 86400 + totalTime.seconds) / (60 * 1.0)))
-            print("----------------------total time: %f minutes" % (totalTime.total_seconds() / 60))
 
-            reward = 100
+            # calculate time difference
+            timeDif = totalTime.seconds + 1.0 * totalTime.microseconds / 1000 / 1000
+
+            # calculate rolling averages
+            if len(self.timeList)<10:
+                self.timeList.append(timeDif)
+            else:
+                self.timeList[self.rollPos] = timeDif
+            if len(self.movesList) < self.rollLength:
+                self.movesList.append(self.movesDone)
+            else:
+                self.movesList[self.rollPos] = self.movesDone
+
+            if self.rollPos >= (self.rollLength - 1):
+                self.rollPos = 0
+            else:
+                self.rollPos += 1
+            # print rolling averages
+            print("rolling avg moves: %d \trolling avg time: %f seconds \tmoves: %d \ttime: %f seconds \tepsilon: %f"
+                  %(1.0*sum(self.movesList)/len(self.movesList), 1.0*sum(self.timeList)/len(self.timeList),
+                    self.movesDone, timeDif, self.ai.epsilon))
+            self.movesDone = 0
+            self.actionsTaken = 0
+
+            # TODO Reward should probably be waaaay higher (like > avergae number of moves at start?)
+            #reward = 100
+            reward = 500000
             if self.lastState is not None:
                 self.ai.learn(self.lastState, self.lastAction, reward, currentState)
             self.lastState = None
@@ -180,6 +202,7 @@ class Puzzle():
             return
 
         # MODIFICATION TEST: stop game after some amount of steps and start new puzzle
+        # currently DEACTIVATED
         if (False & self.actionsTaken >= 7000):
             # reward = -100
             self.ai.learn(self.lastState, self.lastAction, reward, currentState)
@@ -234,12 +257,12 @@ learningSteps = 100000000
 # TODO is the initially set epsilon value just overwritten immediately?
 # learning factor
 epsilonX = (0, learningSteps * 0.7)  # for how many time steps epsilon will be > 0, TODO value experimental
-epsilonY = (0.35, 0)  # TODO why does the mouse still learn with an exploration factor of 0?
+epsilonY = (0.35, 0)
 # decay rate for epsilon so it hits 0 after epsilonX[1] time steps
 epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 
 puzzle.startTime = datetime.now()
-print("----------------------puzzle start: %s" %puzzle.startTime)
+print("puzzle start: %s" %puzzle.startTime)
 
 # pre train the player
 #while puzzle.age < learningSteps:
@@ -267,9 +290,9 @@ while True:
 
         #print("length of learner db: %d" % (len(puzzle.ai.q)))
         #print "Age: {:d}, e: {:0.3f}, Solved: {:d}, average steps per puzzle: {:f}" \
-        print "Age: {:d}, e: {:0.3f}, Solved: {:d}" \
-            .format(puzzle.age, puzzle.ai.epsilon, puzzle.solved)#,averageStepsPerPuzzle)
-        print("Legal puzzle swap attempts: %f%% " %(puzzle.movesDone/float(puzzle.actionsTaken)*100))
+        #print "Age: {:d}, e: {:0.3f}, Solved: {:d}" \
+        #    .format(puzzle.age, puzzle.ai.epsilon, puzzle.solved)#,averageStepsPerPuzzle)
+        #print("Legal puzzle swap attempts: %f%% " %(puzzle.movesDone/float(puzzle.actionsTaken)*100))
         #print("total actions: %d" %(puzzle.actionsTaken))
         # puzzle.solved = 0
 
