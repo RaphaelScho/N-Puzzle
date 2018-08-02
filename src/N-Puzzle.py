@@ -24,7 +24,7 @@ class Puzzle():
         # epsilon ... exploration factor between 0-1 (chance of taking a random action)
 
         # set values, epsilon will be periodically overwritten (see pre train section farther down) until it reaches 0
-        self.ai = learner.QLearn(actions=range(puzzleSize ** 2), alpha=0.1, gamma=0.9, epsilon=0.1)
+        self.ai = learner.QLearn(actions=range(puzzleSize ** 2), alpha=0.1, gamma=0.90, epsilon=0.1)
         self.lastState = None
         self.lastAction = None
         self.solved = 0
@@ -151,9 +151,9 @@ class Puzzle():
 
         # TODO maybe it is better to not selectively punish this
         # if last action was not legal -> useless action -> punish
-        if(self.lastState == currentState):
+        #if(self.lastState == currentState):
             # TODO change back to -=2
-            reward -= 2
+            #reward -= 2
             #pass
 
         # observe the reward and update the Q-value
@@ -167,29 +167,28 @@ class Puzzle():
             timeDif = totalTime.seconds + 1.0 * totalTime.microseconds / 1000 / 1000
 
             # calculate rolling averages
-            if len(self.timeList)<10:
-                self.timeList.append(timeDif)
-            else:
-                self.timeList[self.rollPos] = timeDif
-            if len(self.movesList) < self.rollLength:
-                self.movesList.append(self.movesDone)
-            else:
-                self.movesList[self.rollPos] = self.movesDone
+            #if len(self.timeList)<10:
+            self.timeList.append(timeDif)
+            #else:
+            #    self.timeList[self.rollPos] = timeDif
+            #if len(self.movesList) < self.rollLength:
+            self.movesList.append(self.movesDone)
+            #else:
+            #    self.movesList[self.rollPos] = self.movesDone
 
-            if self.rollPos >= (self.rollLength - 1):
-                self.rollPos = 0
-            else:
-                self.rollPos += 1
+            #if self.rollPos >= (self.rollLength - 1):
+            #    self.rollPos = 0
+            #else:
+            self.rollPos += 1
             # print rolling averages
-            print("rolling avg moves: %d \trolling avg time: %f seconds \tmoves: %d \ttime: %f seconds \tepsilon: %f"
+            print("avg moves: %d \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \t\tepsilon: %f \tsolved: %f"
                   %(1.0*sum(self.movesList)/len(self.movesList), 1.0*sum(self.timeList)/len(self.timeList),
-                    self.movesDone, timeDif, self.ai.epsilon))
+                    self.movesDone, timeDif, self.ai.epsilon, self.solved)).expandtabs(18)
             self.movesDone = 0
             self.actionsTaken = 0
 
-            # TODO Reward should probably be waaaay higher (like > avergae number of moves at start?)
             #reward = 100
-            reward = 500000
+            reward = 1000
             if self.lastState is not None:
                 self.ai.learn(self.lastState, self.lastAction, reward, currentState)
             self.lastState = None
@@ -203,14 +202,14 @@ class Puzzle():
 
         # MODIFICATION TEST: stop game after some amount of steps and start new puzzle
         # currently DEACTIVATED
-        if (False & self.actionsTaken >= 7000):
-            # reward = -100
-            self.ai.learn(self.lastState, self.lastAction, reward, currentState)
-            self.lastState = None
-            self.state = self.randomizer.makeRandomPuzzle()
-            self.emptyCellPos = self.initEmptyCellPos()
-            self.movesDone = 0
-            self.actionsTaken = 0
+        #if (False & self.actionsTaken >= 7000):
+        #    # reward = -100
+        #    self.ai.learn(self.lastState, self.lastAction, reward, currentState)
+        #    self.lastState = None
+        #    self.state = self.randomizer.makeRandomPuzzle()
+        #    self.emptyCellPos = self.initEmptyCellPos()
+        #    self.movesDone = 0
+        #    self.actionsTaken = 0
             #print("Puzzle canceled")
 
 
@@ -251,13 +250,13 @@ if(puzzleSize < 3):
 puzzle = Puzzle(puzzleSize=puzzleSize)
 
 # how many time steps to pre train
-learningSteps = 100000000
+learningSteps = 200000000
 
 
 # TODO is the initially set epsilon value just overwritten immediately?
 # learning factor
 epsilonX = (0, learningSteps * 0.7)  # for how many time steps epsilon will be > 0, TODO value experimental
-epsilonY = (0.35, 0)
+epsilonY = (0.22, 0)
 # decay rate for epsilon so it hits 0 after epsilonX[1] time steps
 epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 
