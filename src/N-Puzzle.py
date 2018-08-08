@@ -25,7 +25,7 @@ class Puzzle():
         # epsilon ... exploration factor between 0-1 (chance of taking a random action)
 
         # set values, epsilon will be periodically overwritten (see pre train section farther down) until it reaches 0
-        self.ai = learner.QLearn(actions=range(puzzleSize ** 2), alpha=0.1, gamma=0.95, epsilon=0.1)
+        self.ai = learner.QLearn(puzzleSize = puzzleSize, alpha=0.1, gamma=0.95, epsilon=0.1)
         self.lastState = None
         self.lastAction = None
         self.solved = 0
@@ -281,10 +281,11 @@ while True:
 
     # every 10.000 steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next 10.000 steps
     if puzzle.age % 10000 == 0:
-        if(puzzle.solved > 0):
-            averageStepsPerPuzzle = puzzle.age / puzzle.solved
-        else:
-            averageStepsPerPuzzle = 0
+        print(puzzle.age)
+        #if(puzzle.solved > 0):
+        #    averageStepsPerPuzzle = puzzle.age / puzzle.solved
+        #else:
+        #    averageStepsPerPuzzle = 0
 
         #print("length of learner db: %d" % (len(puzzle.ai.q)))
         #print "Age: {:d}, e: {:0.3f}, Solved: {:d}, average steps per puzzle: {:f}" \

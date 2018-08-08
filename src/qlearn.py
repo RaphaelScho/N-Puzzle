@@ -2,7 +2,7 @@ import random
 
 
 class QLearn:
-    def __init__(self, actions, epsilon=0.1, alpha=0.2, gamma=0.9):
+    def __init__(self, puzzleSize, epsilon=0.1, alpha=0.2, gamma=0.9):
         # q is a dictionary
         self.q = {}
 
@@ -14,7 +14,7 @@ class QLearn:
         # at 1 infinite rewards possible -> dont go to 1)
         self.gamma = gamma
 
-        self.actions = actions
+        self.actions = range(puzzleSize ** 2)
 
     # TODO does this cost too much time??
     # turns a state (list of lists) into a tuple of tuples so dict can handle it as a key
