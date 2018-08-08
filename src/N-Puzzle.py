@@ -1,9 +1,10 @@
-import display
-import qlearn as learner
+#import display
+#import qlearn as learner
+import qlearn_nn as learner
 import puzzleRandomizer
 from datetime import datetime
 
-import solverBySomeGuy
+#import solverBySomeGuy
 
 # ------------------------------------------------------------ #
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
@@ -49,7 +50,7 @@ class Puzzle():
         self.positionConverter = self.init1dTo2dPositionConverter()
         # create array equal to state, but with the expected solutions instead
         self.solution = self.initSolvedPosition()
-        self.display = display.makeDisplay(self)
+        # self.display = display.makeDisplay(self)
         # init variables to calc rolling averages
         self.rollLength = 10
         self.rollPos = 0
@@ -180,9 +181,9 @@ class Puzzle():
             #else:
             self.rollPos += 1
             # print rolling averages
-            print("avg moves: %d \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \t\tepsilon: %f \tsolved: %f"
+            print(("avg moves: %d \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \t\tepsilon: %f \tsolved: %f"
                   %(1.0*sum(self.movesList)/len(self.movesList), 1.0*sum(self.timeList)/len(self.timeList),
-                    self.movesDone, timeDif, self.ai.epsilon, self.solved)).expandtabs(18)
+                    self.movesDone, timeDif, self.ai.epsilon, self.solved)).expandtabs(18))
             self.movesDone = 0
             self.actionsTaken = 0
 

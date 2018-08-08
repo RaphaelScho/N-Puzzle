@@ -49,7 +49,7 @@ class PygameDisplay:
                     try:
                         self.screen.fill(c, (sx, sy, self.size, self.size))
                     except TypeError:
-                        print 'Error: invalid colour:', c
+                        print('Error: invalid colour:', c)
                 sx += self.size
             odd = not odd
             sy += self.size
