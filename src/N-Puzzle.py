@@ -24,7 +24,7 @@ class Puzzle():
         # epsilon ... exploration factor between 0-1 (chance of taking a random action)
 
         # set values, epsilon will be periodically overwritten (see pre train section farther down) until it reaches 0
-        self.ai = learner.QLearn(actions=range(puzzleSize ** 2), alpha=0.1, gamma=0.90, epsilon=0.1)
+        self.ai = learner.QLearn(actions=range(puzzleSize ** 2), alpha=0.1, gamma=0.95, epsilon=0.1)
         self.lastState = None
         self.lastAction = None
         self.solved = 0
@@ -152,7 +152,6 @@ class Puzzle():
         # TODO maybe it is better to not selectively punish this
         # if last action was not legal -> useless action -> punish
         #if(self.lastState == currentState):
-            # TODO change back to -=2
             #reward -= 2
             #pass
 
@@ -187,8 +186,7 @@ class Puzzle():
             self.movesDone = 0
             self.actionsTaken = 0
 
-            #reward = 100
-            reward = 1000
+            reward = 150
             if self.lastState is not None:
                 self.ai.learn(self.lastState, self.lastAction, reward, currentState)
             self.lastState = None
@@ -256,7 +254,7 @@ learningSteps = 200000000
 # TODO is the initially set epsilon value just overwritten immediately?
 # learning factor
 epsilonX = (0, learningSteps * 0.7)  # for how many time steps epsilon will be > 0, TODO value experimental
-epsilonY = (0.22, 0)
+epsilonY = (0.15, 0)
 # decay rate for epsilon so it hits 0 after epsilonX[1] time steps
 epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 

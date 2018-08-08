@@ -16,6 +16,7 @@ class QLearn:
 
         self.actions = actions
 
+    # TODO does this cost too much time??
     # turns a state (list of lists) into a tuple of tuples so dict can handle it as a key
     def turnStateIntoTuple(self,state):
         return tuple(tuple(i) for i in state)
