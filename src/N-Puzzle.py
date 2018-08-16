@@ -1,8 +1,11 @@
 #import display
-#import qlearn as learner
-import qlearn_nn as learner
+
+import qlearn as learner
+#import qlearn_nn as learner
+
 import puzzleRandomizer
 from datetime import datetime
+from copy import deepcopy
 
 #import solverBySomeGuy
 
@@ -10,7 +13,7 @@ from datetime import datetime
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
 
 
-puzzleSize = 3  # must be 3 or higher! Size 3 means 3x3 puzzle
+puzzleSize = 3  # Size 3 means 3x3 puzzle
 
 
 # ------------------------------------------------------------ #
@@ -54,8 +57,10 @@ class Puzzle():
         # init variables to calc rolling averages
         self.rollLength = 10
         self.rollPos = 0
-        self.timeList = []
-        self.movesList = []
+        #self.timeList = []
+        #self.movesList = []
+        self.totalMoves = 0
+        self.totalTime = 0
 
     # create neighbours dict which has a list of neighbour-positions for each position
     def initNeighbours(self):
@@ -146,7 +151,7 @@ class Puzzle():
     def update(self):
         # self.display.update()
         # calculate the state of the surrounding cells (cat, cheese, wall, empty)
-        currentState = self.state
+        currentState = deepcopy(self.state)
         # assign a reward of -1 by default
         reward = -1
 
@@ -168,11 +173,13 @@ class Puzzle():
 
             # calculate rolling averages
             #if len(self.timeList)<10:
-            self.timeList.append(timeDif)
+            #self.timeList.append(timeDif)
+            self.totalTime += timeDif
             #else:
             #    self.timeList[self.rollPos] = timeDif
             #if len(self.movesList) < self.rollLength:
-            self.movesList.append(self.movesDone)
+            #self.movesList.append(self.movesDone)
+            self.totalMoves += self.movesDone
             #else:
             #    self.movesList[self.rollPos] = self.movesDone
 
@@ -181,13 +188,17 @@ class Puzzle():
             #else:
             self.rollPos += 1
             # print rolling averages
-            print(("avg moves: %d \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \t\tepsilon: %f \tsolved: %f"
-                  %(1.0*sum(self.movesList)/len(self.movesList), 1.0*sum(self.timeList)/len(self.timeList),
-                    self.movesDone, timeDif, self.ai.epsilon, self.solved)).expandtabs(18))
+            #print(("avg moves: %d \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \t\tepsilon: %f \tsolved: %f"
+            #      %(1.0*sum(self.movesList)/len(self.movesList), 1.0*sum(self.timeList)/len(self.timeList),
+            #        self.movesDone, timeDif, self.ai.epsilon, self.solved)).expandtabs(18))
+            print(("avg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \t\tepsilon: %f \tsolved: %d"
+                   % (self.totalMoves / (self.solved * 1.0), self.totalTime / (self.solved * 1.0),
+                      self.movesDone, timeDif, self.ai.epsilon, self.solved)).expandtabs(18))
+            #print(self.ai.q)
             self.movesDone = 0
             self.actionsTaken = 0
 
-            reward = 150
+            reward = 15
             if self.lastState is not None:
                 self.ai.learn(self.lastState, self.lastAction, reward, currentState)
             self.lastState = None
@@ -216,10 +227,10 @@ class Puzzle():
             self.ai.learn(self.lastState, self.lastAction, reward, currentState)
 
         # get updated state (puzzle might have been recreated after being solved), choose a new action and execute it
-        currentState = self.state
+        currentState = deepcopy(self.state)
         action = self.ai.chooseAction(currentState)
 
-        self.lastState = currentState
+        self.lastState = deepcopy(currentState)
         self.lastAction = action
 
         # move chosen tile, if it can not be moved do nothing
@@ -242,20 +253,20 @@ class Puzzle():
 # start learning
 # ----------------------------------
 
-if(puzzleSize < 3):
-    print("puzzleSize too small, set to 3 instead!")
-    puzzleSize = 3
+#if(puzzleSize < 3):
+    #print("puzzleSize too small, set to 3 instead!")
+    #puzzleSize = 3
 
 puzzle = Puzzle(puzzleSize=puzzleSize)
 
 # how many time steps to pre train
-learningSteps = 200000000
+learningSteps = 300000000
 
 
 # TODO is the initially set epsilon value just overwritten immediately?
 # learning factor
 epsilonX = (0, learningSteps * 0.7)  # for how many time steps epsilon will be > 0, TODO value experimental
-epsilonY = (0.15, 0)
+epsilonY = (0.12, 0)
 # decay rate for epsilon so it hits 0 after epsilonX[1] time steps
 epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 
@@ -280,8 +291,8 @@ while True:
         # puzzle.ai.epsilon *= 0.9995
 
     # every 10.000 steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next 10.000 steps
-    if puzzle.age % 10000 == 0:
-        print(puzzle.age)
+    #if puzzle.age % 100000 == 0:
+    #    print(puzzle.age)
         #if(puzzle.solved > 0):
         #    averageStepsPerPuzzle = puzzle.age / puzzle.solved
         #else:
