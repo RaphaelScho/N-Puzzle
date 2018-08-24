@@ -28,7 +28,8 @@ class Puzzle():
         # epsilon ... exploration factor between 0-1 (chance of taking a random action)
 
         # set values, epsilon will be periodically overwritten (see pre train section farther down) until it reaches 0
-        self.ai = learner.QLearn(puzzleSize = puzzleSize, alpha=0.1, gamma=0.95, epsilon=0.1)
+        # testing alpha = 1 instead of 0.1
+        self.ai = learner.QLearn(puzzleSize = puzzleSize, alpha=1, gamma=0.95, epsilon=0.1)
         self.lastState = None
         self.lastAction = None
         self.solved = 0
@@ -54,13 +55,10 @@ class Puzzle():
         # create array equal to state, but with the expected solutions instead
         self.solution = self.initSolvedPosition()
         # self.display = display.makeDisplay(self)
-        # init variables to calc rolling averages
-        self.rollLength = 10
-        self.rollPos = 0
-        #self.timeList = []
-        #self.movesList = []
+        # init variables to calc averages
         self.totalMoves = 0
         self.totalTime = 0
+        self.solveCount = 0
 
     # create neighbours dict which has a list of neighbour-positions for each position
     def initNeighbours(self):
@@ -164,12 +162,20 @@ class Puzzle():
         # observe the reward and update the Q-value
         if self.isPuzzleSolved():
             self.solved += 1
+            self.solveCount += 1
 
             endTime = datetime.now()
             totalTime = endTime - self.startTime
 
             # calculate time difference
             timeDif = totalTime.seconds + 1.0 * totalTime.microseconds / 1000 / 1000
+
+            # reset average calculation every few puzzles
+            if self.solved % 35 == 0:
+                self.totalTime = 0
+                self.totalMoves = 0
+                self.solveCount = 1
+                print("resetting calculation of average")
 
             # calculate rolling averages
             #if len(self.timeList)<10:
@@ -186,18 +192,19 @@ class Puzzle():
             #if self.rollPos >= (self.rollLength - 1):
             #    self.rollPos = 0
             #else:
-            self.rollPos += 1
+            #self.rollPos += 1
             # print rolling averages
             #print(("avg moves: %d \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \t\tepsilon: %f \tsolved: %f"
             #      %(1.0*sum(self.movesList)/len(self.movesList), 1.0*sum(self.timeList)/len(self.timeList),
             #        self.movesDone, timeDif, self.ai.epsilon, self.solved)).expandtabs(18))
             print(("avg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \t\tepsilon: %f \tsolved: %d"
-                   % (self.totalMoves / (self.solved * 1.0), self.totalTime / (self.solved * 1.0),
+                   % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
                       self.movesDone, timeDif, self.ai.epsilon, self.solved)).expandtabs(18))
             #print(self.ai.q)
             self.movesDone = 0
             self.actionsTaken = 0
 
+            #reward = 1
             reward = 15
             if self.lastState is not None:
                 self.ai.learn(self.lastState, self.lastAction, reward, currentState)
@@ -260,13 +267,13 @@ class Puzzle():
 puzzle = Puzzle(puzzleSize=puzzleSize)
 
 # how many time steps to pre train
-learningSteps = 300000000
+learningSteps = 2000000
 
 
 # TODO is the initially set epsilon value just overwritten immediately?
 # learning factor
-epsilonX = (0, learningSteps * 0.7)  # for how many time steps epsilon will be > 0, TODO value experimental
-epsilonY = (0.12, 0)
+epsilonX = (0, learningSteps)  # for how many time steps epsilon will be > 0, TODO value experimental
+epsilonY = (0.05, 0)
 # decay rate for epsilon so it hits 0 after epsilonX[1] time steps
 epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 
