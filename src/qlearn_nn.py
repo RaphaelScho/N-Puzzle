@@ -38,7 +38,7 @@ class QLearn:
 
         # Below we obtain the loss by taking the sum of squares difference between the target and prediction Q values.
         self.nextQ = tf.placeholder(shape=[1, self.actionsSize], dtype=tf.float32)
-        self.loss = tf.reduce_sum(tf.square(self.nextQ - self.Qout))
+        self.loss = tf.reduce_sum(tf.square(tf.clip_by_value(self.nextQ - self.Qout,-2,2)))
         self.trainer = tf.train.GradientDescentOptimizer(learning_rate=self.alpha)
         self.updateModel = self.trainer.minimize(self.loss)
 
@@ -73,11 +73,11 @@ class QLearn:
         targetQ = self.allQ
         # TODO for some reasong targetQ and thus allQ goes towards infinity FAST -> becomes nan
         targetQ[0, action] = reward + self.gamma * maxQ1
-        print("target")
-        print(targetQ)
-        print(reward)
-        print(self.gamma)
-        print(maxQ1)
+        #print("target")
+        #print(targetQ)
+        #print(reward)
+        #print(self.gamma)
+        #print(maxQ1)
         # Train our network using target and predicted Q values
         _, W1 = self.sess.run([self.updateModel, self.W], feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
 
@@ -111,9 +111,9 @@ class QLearn:
             action = random.choice(self.actions)
         else:
             action = a[0]
-            print(action)
-            print(a)
-        print("allQ")
-        print(self.allQ)
+            #print(action)
+            #print(a)
+        #print("allQ")
+        #print(self.allQ)
         return action
 

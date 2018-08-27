@@ -1,7 +1,7 @@
 #import display
 
-import qlearn as learner
-#import qlearn_nn as learner
+#import qlearn as learner
+import qlearn_nn as learner
 
 import puzzleRandomizer
 from datetime import datetime
@@ -29,7 +29,7 @@ class Puzzle():
 
         # set values, epsilon will be periodically overwritten (see pre train section farther down) until it reaches 0
         # testing alpha = 1 instead of 0.1
-        self.ai = learner.QLearn(puzzleSize = puzzleSize, alpha=1, gamma=0.95, epsilon=0.1)
+        self.ai = learner.QLearn(puzzleSize = puzzleSize, alpha=0.1, gamma=0.95, epsilon=0.05)
         self.lastState = None
         self.lastAction = None
         self.solved = 0
@@ -298,7 +298,10 @@ while True:
         # puzzle.ai.epsilon *= 0.9995
 
     # every 10.000 steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next 10.000 steps
-    #if puzzle.age % 100000 == 0:
+    if puzzle.age % 40000 == 0:
+        print(puzzle.ai.allQ)
+        print(puzzle.lastAction)
+        print(puzzle.state)
     #    print(puzzle.age)
         #if(puzzle.solved > 0):
         #    averageStepsPerPuzzle = puzzle.age / puzzle.solved
