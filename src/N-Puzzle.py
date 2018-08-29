@@ -7,7 +7,6 @@ import puzzleRandomizer
 from datetime import datetime
 from copy import deepcopy
 
-#import solverBySomeGuy
 
 # ------------------------------------------------------------ #
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
@@ -29,7 +28,7 @@ class Puzzle():
 
         # set values, epsilon will be periodically overwritten (see pre train section farther down) until it reaches 0
         # testing alpha = 1 instead of 0.1
-        self.ai = learner.QLearn(puzzleSize = puzzleSize, alpha=0.1, gamma=0.95, epsilon=0.05)
+        self.ai = learner.QLearn(puzzleSize = puzzleSize, alpha=1, gamma=0.95, epsilon=0.1)
         self.lastState = None
         self.lastAction = None
         self.solved = 0
@@ -260,20 +259,14 @@ class Puzzle():
 # start learning
 # ----------------------------------
 
-#if(puzzleSize < 3):
-    #print("puzzleSize too small, set to 3 instead!")
-    #puzzleSize = 3
-
 puzzle = Puzzle(puzzleSize=puzzleSize)
 
-# how many time steps to pre train
-learningSteps = 2000000
+# over how many steps epsilon is reduced to its final value
+learningSteps = 8000000
 
-
-# TODO is the initially set epsilon value just overwritten immediately?
 # learning factor
 epsilonX = (0, learningSteps)  # for how many time steps epsilon will be > 0, TODO value experimental
-epsilonY = (0.05, 0)
+epsilonY = (puzzle.ai.epsilon, 0) # start and end epsilon value
 # decay rate for epsilon so it hits 0 after epsilonX[1] time steps
 epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 
@@ -283,7 +276,6 @@ print("puzzle start: %s" %puzzle.startTime)
 # pre train the player
 #while puzzle.age < learningSteps:
 while True:
-#while len(puzzle.ai.q) < 3600000:
     # calls update on puzzle (do action and learn) and then updates score and redraws screen
     puzzle.update()
 
@@ -298,10 +290,13 @@ while True:
         # puzzle.ai.epsilon *= 0.9995
 
     # every 10.000 steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next 10.000 steps
-    if puzzle.age % 40000 == 0:
-        print(puzzle.ai.allQ)
+    if puzzle.age % 1000 == 0:
+        #print(puzzle.ai.allQ)
         print(puzzle.lastAction)
-        print(puzzle.state)
+        #print(puzzle.ai.epsilon)
+        #print(puzzle.state)
+        #for row in puzzle.state:
+        #    print(row)
     #    print(puzzle.age)
         #if(puzzle.solved > 0):
         #    averageStepsPerPuzzle = puzzle.age / puzzle.solved
@@ -316,16 +311,16 @@ while True:
         #print("total actions: %d" %(puzzle.actionsTaken))
         # puzzle.solved = 0
 
-        '''
-        if(len(puzzle.ai.q) > 2200000):
-            print("WRITING")
-            f = open("output.txt","w")
-            #f.write(str(puzzle.ai.q))
-            for (key,value) in puzzle.ai.q.items():
-                f.write("%s: %d%s" %(str(key), value,"\n"))
-            f.close()
-            break
-        '''
+
+        #if(len(puzzle.ai.q) > 2200000):
+        #    print("WRITING")
+        #    f = open("output.txt","w")
+        #    #f.write(str(puzzle.ai.q))
+        #    for (key,value) in puzzle.ai.q.items():
+        #        f.write("%s: %d%s" %(str(key), value,"\n"))
+        #    f.close()
+        #    break
+
 
         #if puzzle.age % 1000000 == 0:
             #print(puzzle.ai.q)

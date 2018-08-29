@@ -42,6 +42,14 @@ class QLearn:
         self.trainer = tf.train.GradientDescentOptimizer(learning_rate=self.alpha)
         self.updateModel = self.trainer.minimize(self.loss)
 
+        self.batch = []
+        self.batchsize = 0
+        self.maxBatchSize = 100 # how many [state,action,reward,newstate] tuples to remember
+        self.learningSteps = 80  # after how many actions should a batch be learned
+        self.learnSize = 70 # how many of those tuples to randomly choose when learning
+        self.age = 0
+
+
 
     # transform state representation using numbers from 0 to N^2-1 to representation using a vector on length N^2
     # for each cell: for N = 2 solution state [[1,2],[3,0]] looks like [[[0,1,0,0],[0,0,1,0]],[[0,0,0,1],[1,0,0,0]]]
@@ -56,31 +64,21 @@ class QLearn:
                 count += 1
         return rep
 
-
-
-    # TODO learning after every step is SLOW
-    # use Q-learning formula to update nn when an action is taken
-    def learn(self, state, action, reward, newstate):
-        #oneD_state = np.asarray(state).flatten()
-        oneD_state = self.transformState(state)
-        #oneD_newstate = np.asarray(newstate).flatten()
-        oneD_newstate = self.transformState(newstate)
+    def doLearning(self, oneD_state, action, reward, oneD_newstate):
         # Obtain the Q' values by feeding the new state through our network
-        #Q1 = self.sess.run(self.Qout, feed_dict={self.inputs1: np.identity(self.actionsSize)[newstate:newstate + 1]})
+        # Q1 = self.sess.run(self.Qout, feed_dict={self.inputs1: np.identity(self.actionsSize)[newstate:newstate + 1]})
         Q1 = self.sess.run(self.Qout, feed_dict={self.inputs1: [oneD_newstate]})
         # Obtain maxQ' and set our target value for chosen action.
         maxQ1 = np.max(Q1)
         targetQ = self.allQ
-        # TODO for some reasong targetQ and thus allQ goes towards infinity FAST -> becomes nan
         targetQ[0, action] = reward + self.gamma * maxQ1
-        #print("target")
-        #print(targetQ)
-        #print(reward)
-        #print(self.gamma)
-        #print(maxQ1)
+        # print("target")
+        # print(targetQ)
+        # print(reward)
+        # print(self.gamma)
+        # print(maxQ1)
         # Train our network using target and predicted Q values
         _, W1 = self.sess.run([self.updateModel, self.W], feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
-
 
 
         # Q-learning: Q(s, a) += alpha * (reward(s,a) + max(Q(s') - Q(s,a))
@@ -89,18 +87,40 @@ class QLearn:
         # alpha ... learning rate between 0-1 (0 means never update Q-values)
         # maxq ... highest reward for any action done in the new state = max(Q(s',a') (for any action in that mew state)
 
-        #maxq = max([self.getQ(newstate, a) for a in self.actions])
+        # maxq = max([self.getQ(newstate, a) for a in self.actions])
 
-        #qTarget = self.alpha * (reward + self.gamma * maxq)
+        # qTarget = self.alpha * (reward + self.gamma * maxq)
 
         # The nn returns a Q value for each action that could be taken in the new state
         # the best action = the highest Q value represents how good the current state is
         # add to that the reward that was received for entering that state and you have the states Q-value
 
+    # TODO learning after every step is SLOW
+    # use Q-learning formula to update nn when an action is taken
+    def learn(self, state, action, reward, newstate):
+        #oneD_state = np.asarray(state).flatten()
+        oneD_state = self.transformState(state)
+        #oneD_newstate = np.asarray(newstate).flatten()
+        oneD_newstate = self.transformState(newstate)
+
+        if self.batchsize > self.maxBatchSize:
+            self.batch.pop(0)
+        else:
+            self.batchsize += 1
+        self.batch.append([oneD_state, action, reward, oneD_newstate])
+
+        if self.age % self.learningSteps == 0:
+            random.shuffle(self.batch)
+            for i in range(self.learnSize):
+                b = self.batch[i]
+                self.doLearning(b[0],b[1],b[2],b[3])
+
+
     # TODO choosing an action is also slow.. not sure if I can do anything about that tho
     # returns the best action based on knowledge in nn
     # chance to return a random action = self.epsilon
     def chooseAction(self, state):
+        self.age += 1
         #oneD_state = np.asarray(state).flatten()
         oneD_state = self.transformState(state)
         # Choose an action by greedily (with e chance of random action) from the Q-network
