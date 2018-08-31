@@ -1,7 +1,7 @@
 #import display
 
-#import qlearn as learner
-import qlearn_nn as learner
+import qlearn as learner
+#import qlearn_nn as learner
 
 import puzzleRandomizer
 from datetime import datetime
@@ -12,8 +12,11 @@ from copy import deepcopy
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
 
 
-puzzleSize = 3  # Size 3 means 3x3 puzzle
+puzzleSize = 4  # Size 3 means 3x3 puzzle
+learningSteps = 50000000 # over how many steps epsilon is reduced to its final value
 
+#puzzleSize = 3  # Size 3 means 3x3 puzzle
+#learningSteps = 20000000 # over how many steps epsilon is reduced to its final value
 
 # ------------------------------------------------------------ #
 # ------------------------------------------------------------ #
@@ -261,9 +264,6 @@ class Puzzle():
 
 puzzle = Puzzle(puzzleSize=puzzleSize)
 
-# over how many steps epsilon is reduced to its final value
-learningSteps = 8000000
-
 # learning factor
 epsilonX = (0, learningSteps)  # for how many time steps epsilon will be > 0, TODO value experimental
 epsilonY = (puzzle.ai.epsilon, 0) # start and end epsilon value
@@ -290,9 +290,9 @@ while True:
         # puzzle.ai.epsilon *= 0.9995
 
     # every 10.000 steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next 10.000 steps
-    if puzzle.age % 1000 == 0:
+    #if puzzle.age % 1000 == 0:
         #print(puzzle.ai.allQ)
-        print(puzzle.lastAction)
+        #print(puzzle.lastAction)
         #print(puzzle.ai.epsilon)
         #print(puzzle.state)
         #for row in puzzle.state:
