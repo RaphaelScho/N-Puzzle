@@ -29,24 +29,35 @@ class QLearn:
         self.sess.run(init_l)
 
         # These lines establish the feed-forward part of the network used to choose actions
-        #self.inputs1 = tf.placeholder(shape=[1, self.actionsSize], dtype=tf.float32)
-        self.inputs1 = tf.placeholder(shape=[1, self.actionsSize**2], dtype=tf.float32)
-        self.W = tf.Variable(tf.random_uniform([self.actionsSize**2, self.actionsSize], 0, 0.01))
-        self.sess.run(self.W.initializer)
-        self.Qout = tf.matmul(self.inputs1, self.W)
+        ##self.inputs1 = tf.placeholder(shape=[1, self.actionsSize], dtype=tf.float32)
+        #self.inputs1 = tf.placeholder(shape=[1, self.actionsSize**2], dtype=tf.float32)
+        #self.W = tf.Variable(tf.random_uniform([self.actionsSize**2, self.actionsSize], 0, 0.01))
+        #self.sess.run(self.W.initializer)
+        #self.Qout = tf.matmul(self.inputs1, self.W)
+        #self.predict = tf.argmax(self.Qout, 1)
+
+        # hidden layers instead
+        hiddenLayerSize = 5
+        self.inputs1 = tf.placeholder(shape=[1,self.actionsSize**2], dtype=tf.float32)
+        fc1 = tf.layers.dense(self.inputs1, hiddenLayerSize, activation=tf.nn.relu)
+        fc2 = tf.layers.dense(fc1, hiddenLayerSize, activation=tf.nn.relu)
+        self.Qout = tf.layers.dense(fc2, self.actionsSize)
         self.predict = tf.argmax(self.Qout, 1)
+
 
         # Below we obtain the loss by taking the sum of squares difference between the target and prediction Q values.
         self.nextQ = tf.placeholder(shape=[1, self.actionsSize], dtype=tf.float32)
         self.loss = tf.reduce_sum(tf.square(tf.clip_by_value(self.nextQ - self.Qout,-2,2)))
         self.trainer = tf.train.GradientDescentOptimizer(learning_rate=self.alpha)
         self.updateModel = self.trainer.minimize(self.loss)
+        self._var_init = tf.global_variables_initializer()
+        self.sess.run(self._var_init)
 
         self.batch = []
         self.batchsize = 0
-        self.maxBatchSize = 100 # how many [state,action,reward,newstate] tuples to remember
-        self.learningSteps = 80  # after how many actions should a batch be learned
-        self.learnSize = 70 # how many of those tuples to randomly choose when learning
+        self.maxBatchSize = 1000 # how many [state,action,reward,newstate] tuples to remember
+        self.learningSteps = 100  # after how many actions should a batch be learned
+        self.learnSize = 100 # how many of those tuples to randomly choose when learning
         self.age = 0
 
 
@@ -78,7 +89,8 @@ class QLearn:
         # print(self.gamma)
         # print(maxQ1)
         # Train our network using target and predicted Q values
-        _, W1 = self.sess.run([self.updateModel, self.W], feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
+        #_, W1 = self.sess.run([self.updateModel, self.W], feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
+        self.sess.run(self.updateModel, feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
 
 
         # Q-learning: Q(s, a) += alpha * (reward(s,a) + max(Q(s') - Q(s,a))
@@ -110,9 +122,10 @@ class QLearn:
         self.batch.append([oneD_state, action, reward, oneD_newstate])
 
         if self.age % self.learningSteps == 0:
-            random.shuffle(self.batch)
-            for i in range(self.learnSize):
-                b = self.batch[i]
+            #random.shuffle(self.batch)
+            chosenBatch = random.sample(self.batch, self.learnSize)
+            for i in range(len(chosenBatch)):
+                b = chosenBatch[i]
                 self.doLearning(b[0],b[1],b[2],b[3])
 
 
