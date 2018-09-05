@@ -1,8 +1,3 @@
-#import display
-
-#import qlearn as learner
-import qlearn_nn as learner
-
 import puzzleRandomizer
 from datetime import datetime
 from copy import deepcopy
@@ -12,15 +7,45 @@ from copy import deepcopy
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
 
 
-#puzzleSize = 4  # Size 3 means 3x3 puzzle
-#learningSteps = 50000000 # over how many steps epsilon is reduced to its final value
+nn_learner = True   # use neural network (True) or lookup dictionary (False)
+puzzleSize = 3      # Size 3 means 3x3 puzzle
 
-#puzzleSize = 3  # Size 3 means 3x3 puzzle
-#learningSteps = 20000000 # over how many steps epsilon is reduced to its final value
 
-puzzleSize = 2  # Size 3 means 3x3 puzzle
-learningSteps = 200000 # over how many steps epsilon is reduced to its final value
-epsilonEndValue = 0.01
+# ------------------------------------------------------------ #
+# ------------------------------------------------------------ #
+
+# TODO maybe qlearn and qlearn_nn need different values here
+if nn_learner:
+    import qlearn_nn as learner
+else:
+    import qlearn as learner
+
+if puzzleSize == 2:
+    learningSteps = 40000   # over how many steps epsilon is reduced to its final value
+    epsilonStartVal = 0.8   # chance to take a random action
+    epsilonEndVal = 0.01
+    alphaVal = 0.1          # learning rate
+    gammaVal = 0.7          # discount factor for future rewards
+    rewardVal = 5           # reward for solving the puzzle
+
+# TODO not set yet
+elif puzzleSize == 3:
+    learningSteps = 5000000
+    epsilonStartVal = 0.8
+    epsilonEndVal = 0.01
+    alphaVal = 0.1
+    gammaVal = 0.93
+    rewardVal = 100
+
+# TODO no set yet
+elif puzzleSize == 4:
+    learningSteps = 500000000
+    epsilonStartVal = 0.8
+    epsilonEndVal = 0.01
+    alphaVal = 0.1
+    gammaVal = 0.99
+    rewardVal = 500
+
 
 # ------------------------------------------------------------ #
 # ------------------------------------------------------------ #
@@ -35,7 +60,7 @@ class Puzzle():
 
         # set values, epsilon will be periodically overwritten (see pre train section farther down) until it reaches 0
         # testing alpha = 1 instead of 0.1
-        self.ai = learner.QLearn(puzzleSize = puzzleSize, alpha=1, gamma=0.95, epsilon=0.1)
+        self.ai = learner.QLearn(puzzleSize = puzzleSize, epsilon=epsilonStartVal, alpha=alphaVal, gamma=gammaVal)
         self.lastState = None
         self.lastAction = None
         self.solved = 0
@@ -210,10 +235,9 @@ class Puzzle():
             self.movesDone = 0
             self.actionsTaken = 0
 
-            #reward = 1
-            reward = 15
+            reward = rewardVal
             if self.lastState is not None:
-                self.ai.learn(self.lastState, self.lastAction, reward, currentState)
+                self.ai.learn(self.lastState, self.lastAction, reward, None)
             self.lastState = None
 
             self.state = self.randomizer.makeRandomPuzzle()
@@ -270,7 +294,7 @@ puzzle = Puzzle(puzzleSize=puzzleSize)
 
 # learning factor
 epsilonX = (0, learningSteps)  # for how many time steps epsilon will be > 0, TODO value experimental
-epsilonY = (puzzle.ai.epsilon, epsilonEndValue) # start and end epsilon value
+epsilonY = (puzzle.ai.epsilon, epsilonEndVal) # start and end epsilon value
 # decay rate for epsilon so it hits 0 after epsilonX[1] time steps
 epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 
@@ -294,28 +318,11 @@ while True:
         # puzzle.ai.epsilon *= 0.9995
 
     # every 10.000 steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next 10.000 steps
-    #if puzzle.age % 1000 == 0:
-        #print(puzzle.ai.allQ)
-        #print(puzzle.lastAction)
-        #print(puzzle.ai.epsilon)
-        #print(puzzle.state)
-        #for row in puzzle.state:
-        #    print(row)
-    #    print(puzzle.age)
-        #if(puzzle.solved > 0):
-        #    averageStepsPerPuzzle = puzzle.age / puzzle.solved
-        #else:
-        #    averageStepsPerPuzzle = 0
+    if puzzle.age % 1000 == 0:
+        print(puzzle.age)
+        print(puzzle.ai.epsilon)
 
-        #print("length of learner db: %d" % (len(puzzle.ai.q)))
-        #print "Age: {:d}, e: {:0.3f}, Solved: {:d}, average steps per puzzle: {:f}" \
-        #print "Age: {:d}, e: {:0.3f}, Solved: {:d}" \
-        #    .format(puzzle.age, puzzle.ai.epsilon, puzzle.solved)#,averageStepsPerPuzzle)
-        #print("Legal puzzle swap attempts: %f%% " %(puzzle.movesDone/float(puzzle.actionsTaken)*100))
-        #print("total actions: %d" %(puzzle.actionsTaken))
-        # puzzle.solved = 0
-
-
+        # print puzzle dict (for qlearn.py)
         #if(len(puzzle.ai.q) > 2200000):
         #    print("WRITING")
         #    f = open("output.txt","w")
@@ -325,9 +332,6 @@ while True:
         #    f.close()
         #    break
 
-
-        #if puzzle.age % 1000000 == 0:
-            #print(puzzle.ai.q)
 
 # ----------------------------------
 # show off

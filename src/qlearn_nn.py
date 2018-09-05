@@ -5,7 +5,7 @@ import numpy as np
 
 
 class QLearn:
-    def __init__(self, puzzleSize, epsilon=0.05, alpha=0.1, gamma=0.9):
+    def __init__(self, puzzleSize, epsilon=0.5, alpha=0.33, gamma=0.9):
 
 
         # exploration factor between 0-1 (chance of taking a random action)
@@ -19,6 +19,14 @@ class QLearn:
         self.puzzleSize = puzzleSize
         self.actionsSize = puzzleSize**2
         self.actions = range(self.actionsSize)
+        self.inputSize = self.actionsSize**2
+
+        if self.puzzleSize == 2:
+            self.hiddenLayerSize = self.inputSize**2
+        elif self.puzzleSize == 3:
+            self.hiddenLayerSize = self.inputSize**1.5 # TODO not set yet .. 2 makes it reaaally slow...
+        elif self.puzzleSize == 4:
+            self.hiddenLayerSize = self.inputSize**1.4 # TODO not set yet
 
         tf.reset_default_graph()
 
@@ -37,10 +45,9 @@ class QLearn:
         #self.predict = tf.argmax(self.Qout, 1)
 
         # hidden layers instead
-        hiddenLayerSize = 5
-        self.inputs1 = tf.placeholder(shape=[1,self.actionsSize**2], dtype=tf.float32)
-        fc1 = tf.layers.dense(self.inputs1, hiddenLayerSize, activation=tf.nn.relu)
-        fc2 = tf.layers.dense(fc1, hiddenLayerSize, activation=tf.nn.relu)
+        self.inputs1 = tf.placeholder(shape=[1,self.inputSize], dtype=tf.float32)
+        fc1 = tf.layers.dense(self.inputs1, self.hiddenLayerSize, activation=tf.nn.relu)
+        fc2 = tf.layers.dense(fc1, self.hiddenLayerSize, activation=tf.nn.relu)
         self.Qout = tf.layers.dense(fc2, self.actionsSize)
         self.predict = tf.argmax(self.Qout, 1)
 
@@ -54,10 +61,11 @@ class QLearn:
         self.sess.run(self._var_init)
 
         self.batch = []
-        self.batchsize = 0
-        self.maxBatchSize = 1000 # how many [state,action,reward,newstate] tuples to remember
-        self.learningSteps = 100  # after how many actions should a batch be learned
-        self.learnSize = 100 # how many of those tuples to randomly choose when learning
+        self.batchSize = 0
+        # TODO those values might also need to change based on puzzle size
+        self.maxBatchSize = 5000 # how many [state,action,reward,newstate] tuples to remember
+        self.learningSteps = 1000  # after how many actions should a batch be learned
+        self.learnSize = 1500 # how many of those tuples to randomly choose when learning
         self.age = 0
 
 
@@ -78,20 +86,31 @@ class QLearn:
     def doLearning(self, oneD_state, action, reward, oneD_newstate):
         # Obtain the Q' values by feeding the new state through our network
         # Q1 = self.sess.run(self.Qout, feed_dict={self.inputs1: np.identity(self.actionsSize)[newstate:newstate + 1]})
-        Q1 = self.sess.run(self.Qout, feed_dict={self.inputs1: [oneD_newstate]})
-        # Obtain maxQ' and set our target value for chosen action.
-        maxQ1 = np.max(Q1)
-        targetQ = self.allQ
-        targetQ[0, action] = reward + self.gamma * maxQ1
+        allQ = self.sess.run(self.Qout, feed_dict={self.inputs1: [oneD_state]})
+        targetQ = allQ
+        #maxQ1 = 0
+        if oneD_newstate is not None:
+            Q1 = self.sess.run(self.Qout, feed_dict={self.inputs1: [oneD_newstate]})
+            # Obtain maxQ' and set our target value for chosen action.
+            maxQ1 = np.amax(Q1)
+            targetQ[0, action] = reward + self.gamma * maxQ1
+        else:
+            targetQ[0, action] = reward
+
+        # Train our network using target and predicted Q values
+        # _, W1 = self.sess.run([self.updateModel, self.W], feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
+        self.sess.run(self.updateModel, feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
+
         # print("target")
         # print(targetQ)
         # print(reward)
         # print(self.gamma)
-        # print(maxQ1)
-        # Train our network using target and predicted Q values
-        #_, W1 = self.sess.run([self.updateModel, self.W], feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
-        self.sess.run(self.updateModel, feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
-
+        #if self.epsilon < 0.4:
+        #    print("maxQ1: %f, t0: %f, t1: %f, t2: %f, t3: %f, reward: %f, action %f" %(maxQ1, targetQ[0, 0],
+        #                                                                               targetQ[0, 1],
+        #                                                                               targetQ[0, 2],
+        #                                                                               targetQ[0, 3],
+        #                                                                               reward, action))
 
         # Q-learning: Q(s, a) += alpha * (reward(s,a) + max(Q(s') - Q(s,a))
         # documented reward += learning rate * (newly received reward + max possible reward for next state - doc reward)
@@ -113,17 +132,25 @@ class QLearn:
         #oneD_state = np.asarray(state).flatten()
         oneD_state = self.transformState(state)
         #oneD_newstate = np.asarray(newstate).flatten()
-        oneD_newstate = self.transformState(newstate)
+        if newstate is not None:
+            oneD_newstate = self.transformState(newstate)
+        else:
+            oneD_newstate = None
 
-        if self.batchsize > self.maxBatchSize:
+        if self.batchSize > self.maxBatchSize:
             self.batch.pop(0)
         else:
-            self.batchsize += 1
+            self.batchSize += 1
         self.batch.append([oneD_state, action, reward, oneD_newstate])
+
+        #TODO it uses less space to store states in original form and only transform when chosen
 
         if self.age % self.learningSteps == 0:
             #random.shuffle(self.batch)
-            chosenBatch = random.sample(self.batch, self.learnSize)
+            if self.batchSize < self.learnSize:
+                chosenBatch = random.sample(self.batch, self.batchSize)
+            else:
+                chosenBatch = random.sample(self.batch, self.learnSize)
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
                 self.doLearning(b[0],b[1],b[2],b[3])
@@ -134,19 +161,17 @@ class QLearn:
     # chance to return a random action = self.epsilon
     def chooseAction(self, state):
         self.age += 1
-        #oneD_state = np.asarray(state).flatten()
-        oneD_state = self.transformState(state)
         # Choose an action by greedily (with e chance of random action) from the Q-network
         # epsilon = chance to choose a random action
-        #print(oneD_state)
-        a, self.allQ = self.sess.run([self.predict, self.Qout], feed_dict={self.inputs1: [oneD_state]})
         if random.random() < self.epsilon:
             action = random.choice(self.actions)
         else:
+            oneD_state = self.transformState(state)
+            a, allQ = self.sess.run([self.predict, self.Qout], feed_dict={self.inputs1: [oneD_state]})
             action = a[0]
-            #print(action)
-            #print(a)
-        #print("allQ")
-        #print(self.allQ)
+            #if self.epsilon < 0.05:
+            #    print("action %f" %(action))
+            #    print("allQ")
+            #    print(allQ)
         return action
 

@@ -40,7 +40,7 @@ class QLearn:
 
         # oldreward is the reward for (s,a) as it was before
         oldreward = self.q.get((stateTuple, action), None)
-        if oldreward is None:
+        if oldreward is None or maxq is None:
             # if (s,a) has not been done before, just put the reward into the dict
             self.q[(stateTuple, action)] = reward
         else:
@@ -70,7 +70,10 @@ class QLearn:
     # all this does is calculate maxqnew and then pass the values to learnQ (which is only called exactly here)
     # could just merge the two functions together (?)
     def learn(self, state, action, reward, newstate):
-        maxqnew = max([self.getQ(newstate, a) for a in self.actions])
-        maxqnew *= self.gamma
+        if newstate is not None:
+            maxqnew = max([self.getQ(newstate, a) for a in self.actions])
+            maxqnew *= self.gamma
+        else:
+            maxqnew = None
         self.learnQ(state, action, reward, maxqnew)
 
