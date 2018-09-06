@@ -30,7 +30,7 @@ if puzzleSize == 2:
 
 # TODO not set yet
 elif puzzleSize == 3:
-    learningSteps = 5000000
+    learningSteps = 1000000
     epsilonStartVal = 0.8
     epsilonEndVal = 0.01
     alphaVal = 0.1

@@ -101,17 +101,6 @@ class QLearn:
         # _, W1 = self.sess.run([self.updateModel, self.W], feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
         self.sess.run(self.updateModel, feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
 
-        # print("target")
-        # print(targetQ)
-        # print(reward)
-        # print(self.gamma)
-        #if self.epsilon < 0.4:
-        #    print("maxQ1: %f, t0: %f, t1: %f, t2: %f, t3: %f, reward: %f, action %f" %(maxQ1, targetQ[0, 0],
-        #                                                                               targetQ[0, 1],
-        #                                                                               targetQ[0, 2],
-        #                                                                               targetQ[0, 3],
-        #                                                                               reward, action))
-
         # Q-learning: Q(s, a) += alpha * (reward(s,a) + max(Q(s') - Q(s,a))
         # documented reward += learning rate * (newly received reward + max possible reward for next state - doc reward)
 
@@ -126,7 +115,6 @@ class QLearn:
         # the best action = the highest Q value represents how good the current state is
         # add to that the reward that was received for entering that state and you have the states Q-value
 
-    # TODO learning after every step is SLOW
     # use Q-learning formula to update nn when an action is taken
     def learn(self, state, action, reward, newstate):
         #oneD_state = np.asarray(state).flatten()
@@ -143,7 +131,8 @@ class QLearn:
             self.batchSize += 1
         self.batch.append([oneD_state, action, reward, oneD_newstate])
 
-        #TODO it uses less space to store states in original form and only transform when chosen
+        # TODO it uses less space to store states in original form and only transform when chosen,
+        # increases calc time though since states are chosen 1.5 times on average
 
         if self.age % self.learningSteps == 0:
             #random.shuffle(self.batch)
@@ -155,8 +144,6 @@ class QLearn:
                 b = chosenBatch[i]
                 self.doLearning(b[0],b[1],b[2],b[3])
 
-
-    # TODO choosing an action is also slow.. not sure if I can do anything about that tho
     # returns the best action based on knowledge in nn
     # chance to return a random action = self.epsilon
     def chooseAction(self, state):
