@@ -1,11 +1,11 @@
 import random
 import tensorflow as tf
 import numpy as np
-
+import nn
 
 
 class QLearn:
-    def __init__(self, puzzleSize, epsilon=0.5, alpha=0.33, gamma=0.9):
+    def __init__(self, puzzleSize, epsilon, alpha, gamma):
 
 
         # exploration factor between 0-1 (chance of taking a random action)
@@ -28,45 +28,63 @@ class QLearn:
         elif self.puzzleSize == 4:
             self.hiddenLayerSize = self.inputSize**1.4 # TODO not set yet
 
-        tf.reset_default_graph()
+        # create one nn per action:
+        self.networks = {}
+        for action in self.actions:
+            net = nn.nn(puzzleSize = self.puzzleSize, alpha = self.alpha)
+            self.networks[action] = net
+            #tf.reset_default_graph()
+            #self.sess = tf.Session()
+            #init = tf.global_variables_initializer()
+            #init_l = tf.local_variables_initializer()
+            #self.sess.run(init)
+            #self.sess.run(init_l)
 
-        self.sess = tf.Session()
-        init = tf.global_variables_initializer()
-        init_l = tf.local_variables_initializer()
-        self.sess.run(init)
-        self.sess.run(init_l)
+            # These lines establish the feed-forward part of the network used to choose actions
+            ##self.inputs1 = tf.placeholder(shape=[1, self.actionsSize], dtype=tf.float32)
+            #self.inputs1 = tf.placeholder(shape=[1, self.actionsSize**2], dtype=tf.float32)
+            #self.W = tf.Variable(tf.random_uniform([self.actionsSize**2, self.actionsSize], 0, 0.01))
+            #self.sess.run(self.W.initializer)
+            #self.Qout = tf.matmul(self.inputs1, self.W)
+            #self.predict = tf.argmax(self.Qout, 1)
 
-        # These lines establish the feed-forward part of the network used to choose actions
-        ##self.inputs1 = tf.placeholder(shape=[1, self.actionsSize], dtype=tf.float32)
-        #self.inputs1 = tf.placeholder(shape=[1, self.actionsSize**2], dtype=tf.float32)
-        #self.W = tf.Variable(tf.random_uniform([self.actionsSize**2, self.actionsSize], 0, 0.01))
-        #self.sess.run(self.W.initializer)
-        #self.Qout = tf.matmul(self.inputs1, self.W)
-        #self.predict = tf.argmax(self.Qout, 1)
-
-        # hidden layers instead
-        self.inputs1 = tf.placeholder(shape=[1,self.inputSize], dtype=tf.float32)
-        fc1 = tf.layers.dense(self.inputs1, self.hiddenLayerSize, activation=tf.nn.relu)
-        fc2 = tf.layers.dense(fc1, self.hiddenLayerSize, activation=tf.nn.relu)
-        self.Qout = tf.layers.dense(fc2, self.actionsSize)
-        self.predict = tf.argmax(self.Qout, 1)
+            # hidden layers instead
+            #self.inputs1 = tf.placeholder(shape=[1,self.inputSize], dtype=tf.float32)
+            #fc1 = tf.layers.dense(self.inputs1, self.hiddenLayerSize, activation=tf.nn.relu)
+            #fc2 = tf.layers.dense(fc1, self.hiddenLayerSize, activation=tf.nn.relu)
+            #self.Qout = tf.layers.dense(fc2, self.actionsSize)
+            #self.predict = tf.argmax(self.Qout, 1)
 
 
-        # Below we obtain the loss by taking the sum of squares difference between the target and prediction Q values.
-        self.nextQ = tf.placeholder(shape=[1, self.actionsSize], dtype=tf.float32)
-        self.loss = tf.reduce_sum(tf.square(tf.clip_by_value(self.nextQ - self.Qout,-2,2)))
-        self.trainer = tf.train.GradientDescentOptimizer(learning_rate=self.alpha)
-        self.updateModel = self.trainer.minimize(self.loss)
-        self._var_init = tf.global_variables_initializer()
-        self.sess.run(self._var_init)
+            # Below we obtain the loss by taking the sum of squares difference between the target and prediction Q values.
+            #self.nextQ = tf.placeholder(shape=[1, self.actionsSize], dtype=tf.float32)
+            #self.loss = tf.reduce_sum(tf.square(tf.clip_by_value(self.nextQ - self.Qout,-2,2)))
+            #self.trainer = tf.train.GradientDescentOptimizer(learning_rate=self.alpha)
+            #self.updateModel = self.trainer.minimize(self.loss)
+            #self._var_init = tf.global_variables_initializer()
+            #self.sess.run(self._var_init)
 
+            #self.batch = []
+            #self.batchSize = 0
+            # TODO those values might also need to change based on puzzle size
+            #self.maxBatchSize = 5000 # how many [state,action,reward,newstate] tuples to remember
+            #self.learningSteps = 1000  # after how many actions should a batch be learned
+            #self.learnSize = 1500 # how many of those tuples to randomly choose when learning
+            #self.age = 0
+
+        # TODO those values might also need to change based on puzzle size
+        self.maxBatchSize = 300  # how many [state,action,reward,newstate] tuples to remember
+        self.learningSteps = 100  # after how many actions should a batch be learned
+        self.learnSize = 150  # how many of those tuples to randomly choose when learning
+        self.age = 0
         self.batch = []
         self.batchSize = 0
-        # TODO those values might also need to change based on puzzle size
-        self.maxBatchSize = 5000 # how many [state,action,reward,newstate] tuples to remember
-        self.learningSteps = 1000  # after how many actions should a batch be learned
-        self.learnSize = 1500 # how many of those tuples to randomly choose when learning
-        self.age = 0
+
+        self.chosenActions = {}
+        self.chosenActions[0] = 0
+        self.chosenActions[1] = 0
+        self.chosenActions[2] = 0
+        self.chosenActions[3] = 0
 
 
 
@@ -74,7 +92,7 @@ class QLearn:
     # for each cell: for N = 2 solution state [[1,2],[3,0]] looks like [[[0,1,0,0],[0,0,1,0]],[[0,0,0,1],[1,0,0,0]]]
     # which is simply represented as [0,1,0,0,0,0,1,0,0,0,0,1,1,0,0,0] and used as input for the NN
     def transformState(self, state):
-        rep = np.full((self.actionsSize ** 2), 0)
+        rep = np.full((self.inputSize), 0)
         count = 0
         for y in range(self.puzzleSize):
             for x in range(self.puzzleSize):
@@ -85,21 +103,28 @@ class QLearn:
 
     def doLearning(self, oneD_state, action, reward, oneD_newstate):
         # Obtain the Q' values by feeding the new state through our network
-        # Q1 = self.sess.run(self.Qout, feed_dict={self.inputs1: np.identity(self.actionsSize)[newstate:newstate + 1]})
-        allQ = self.sess.run(self.Qout, feed_dict={self.inputs1: [oneD_state]})
+        allQ = self.networks[action].sess.run(self.networks[action].Qout,
+                                              feed_dict={self.networks[action].inputs: [oneD_state]})
         targetQ = allQ
-        #maxQ1 = 0
         if oneD_newstate is not None:
-            Q1 = self.sess.run(self.Qout, feed_dict={self.inputs1: [oneD_newstate]})
+            # calculate Q1 for all actions and find maximum
+            qList = []
+            for a in self.actions:
+                Q1 = self.networks[a].sess.run(self.networks[a].Qout,
+                                                feed_dict={self.networks[a].inputs: [oneD_newstate]})
+                qList.append(np.amax(Q1))
             # Obtain maxQ' and set our target value for chosen action.
-            maxQ1 = np.amax(Q1)
-            targetQ[0, action] = reward + self.gamma * maxQ1
+            #maxQ1 = np.amax(Q1)
+            maxQ1 = max(qList)
+            targetQ[0] = reward + self.gamma * maxQ1
         else:
-            targetQ[0, action] = reward
+            targetQ[0] = reward
 
         # Train our network using target and predicted Q values
         # _, W1 = self.sess.run([self.updateModel, self.W], feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
-        self.sess.run(self.updateModel, feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
+        self.networks[action].sess.run(self.networks[action].updateModel,
+                                       feed_dict={self.networks[action].inputs: [oneD_state],
+                                                  self.networks[action].nextQ: targetQ})
 
         # Q-learning: Q(s, a) += alpha * (reward(s,a) + max(Q(s') - Q(s,a))
         # documented reward += learning rate * (newly received reward + max possible reward for next state - doc reward)
@@ -135,7 +160,12 @@ class QLearn:
         # increases calc time though since states are chosen 1.5 times on average
 
         if self.age % self.learningSteps == 0:
-            #random.shuffle(self.batch)
+            print(self.chosenActions)
+            self.chosenActions[0] = 0
+            self.chosenActions[1] = 0
+            self.chosenActions[2] = 0
+            self.chosenActions[3] = 0
+
             if self.batchSize < self.learnSize:
                 chosenBatch = random.sample(self.batch, self.batchSize)
             else:
@@ -153,12 +183,21 @@ class QLearn:
         if random.random() < self.epsilon:
             action = random.choice(self.actions)
         else:
+            # get max of all networks
             oneD_state = self.transformState(state)
-            a, allQ = self.sess.run([self.predict, self.Qout], feed_dict={self.inputs1: [oneD_state]})
-            action = a[0]
+            actList = []
+            for a in self.actions:
+                act, allQ = self.networks[a].sess.run([self.networks[a].predict, self.networks[a].Qout],
+                                                      feed_dict={self.networks[a].inputs: [oneD_state]})
+                actList.append(allQ[0][0])
+            action = actList.index(max(actList))
+            #print(actList)
+            #action = act[0]
             #if self.epsilon < 0.05:
             #    print("action %f" %(action))
             #    print("allQ")
             #    print(allQ)
+
+        self.chosenActions[action] +=1
         return action
 

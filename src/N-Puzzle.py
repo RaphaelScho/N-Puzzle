@@ -8,7 +8,7 @@ from copy import deepcopy
 
 
 nn_learner = True   # use neural network (True) or lookup dictionary (False)
-puzzleSize = 3      # Size 3 means 3x3 puzzle
+puzzleSize = 2      # Size 3 means 3x3 puzzle
 
 
 # ------------------------------------------------------------ #
@@ -22,10 +22,10 @@ else:
 
 if puzzleSize == 2:
     learningSteps = 40000   # over how many steps epsilon is reduced to its final value
-    epsilonStartVal = 0.8   # chance to take a random action
+    epsilonStartVal = 0.05   # chance to take a random action
     epsilonEndVal = 0.01
-    alphaVal = 0.1          # learning rate
-    gammaVal = 0.7          # discount factor for future rewards
+    alphaVal = 0.01          # learning rate
+    gammaVal = 0.95          # discount factor for future rewards
     rewardVal = 5           # reward for solving the puzzle
 
 # TODO not set yet
@@ -186,9 +186,9 @@ class Puzzle():
 
         # TODO maybe it is better to not selectively punish this
         # if last action was not legal -> useless action -> punish
-        #if(self.lastState == currentState):
-            #reward -= 2
-            #pass
+        if(self.lastState == currentState):
+            reward = -2
+            pass
 
         # observe the reward and update the Q-value
         if self.isPuzzleSolved():
