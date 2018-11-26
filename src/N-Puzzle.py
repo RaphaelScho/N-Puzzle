@@ -8,7 +8,7 @@ from copy import deepcopy
 
 
 nn_learner = True   # use neural network (True) or lookup dictionary (False)
-puzzleSize = 2      # Size 3 means 3x3 puzzle
+puzzleSize = 3      # Size 3 means 3x3 puzzle
 
 
 # ------------------------------------------------------------ #
@@ -28,13 +28,12 @@ if puzzleSize == 2:
     gammaVal = 0.95          # discount factor for future rewards
     rewardVal = 5           # reward for solving the puzzle
 
-# TODO not set yet
 elif puzzleSize == 3:
     learningSteps = 1000000
-    epsilonStartVal = 0.8
+    epsilonStartVal = 0.05
     epsilonEndVal = 0.01
-    alphaVal = 0.1
-    gammaVal = 0.93
+    alphaVal = 0.01
+    gammaVal = 0.99
     rewardVal = 100
 
 # TODO no set yet

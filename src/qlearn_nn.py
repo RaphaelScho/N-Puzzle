@@ -73,18 +73,18 @@ class QLearn:
             #self.age = 0
 
         # TODO those values might also need to change based on puzzle size
-        self.maxBatchSize = 300  # how many [state,action,reward,newstate] tuples to remember
+        self.maxBatchSize = 500  # how many [state,action,reward,newstate] tuples to remember
         self.learningSteps = 100  # after how many actions should a batch be learned
         self.learnSize = 150  # how many of those tuples to randomly choose when learning
         self.age = 0
         self.batch = []
         self.batchSize = 0
 
-        self.chosenActions = {}
-        self.chosenActions[0] = 0
-        self.chosenActions[1] = 0
-        self.chosenActions[2] = 0
-        self.chosenActions[3] = 0
+        #self.chosenActions = {}
+        #self.chosenActions[0] = 0
+        #self.chosenActions[1] = 0
+        #self.chosenActions[2] = 0
+        #self.chosenActions[3] = 0
 
 
 
@@ -160,11 +160,11 @@ class QLearn:
         # increases calc time though since states are chosen 1.5 times on average
 
         if self.age % self.learningSteps == 0:
-            print(self.chosenActions)
-            self.chosenActions[0] = 0
-            self.chosenActions[1] = 0
-            self.chosenActions[2] = 0
-            self.chosenActions[3] = 0
+            #print(self.chosenActions)
+            #self.chosenActions[0] = 0
+            #self.chosenActions[1] = 0
+            #self.chosenActions[2] = 0
+            #self.chosenActions[3] = 0
 
             if self.batchSize < self.learnSize:
                 chosenBatch = random.sample(self.batch, self.batchSize)
@@ -198,6 +198,6 @@ class QLearn:
             #    print("allQ")
             #    print(allQ)
 
-        self.chosenActions[action] +=1
+        #self.chosenActions[action] +=1
         return action
 
