@@ -246,19 +246,6 @@ class Puzzle():
 
             return
 
-        # MODIFICATION TEST: stop game after some amount of steps and start new puzzle
-        # currently DEACTIVATED
-        #if (False & self.actionsTaken >= 7000):
-        #    # reward = -100
-        #    self.ai.learn(self.lastState, self.lastAction, reward, currentState)
-        #    self.lastState = None
-        #    self.state = self.randomizer.makeRandomPuzzle()
-        #    self.emptyCellPos = self.initEmptyCellPos()
-        #    self.movesDone = 0
-        #    self.actionsTaken = 0
-            #print("Puzzle canceled")
-
-
         if self.lastState is not None:
             self.ai.learn(self.lastState, self.lastAction, reward, currentState)
 
@@ -273,10 +260,7 @@ class Puzzle():
         self.moveTile(action)
 
     def isPuzzleSolved(self):
-        if (self.state == self.solution):
-            return True
-        else:
-            return False
+        return (self.state == self.solution)
 
     #def getCellValue(self, x, y):
     #    return self.state[self.puzzleSize * y + x]
@@ -294,13 +278,13 @@ puzzle = Puzzle(puzzleSize=puzzleSize)
 # learning factor
 epsilonX = (0, learningSteps)  # for how many time steps epsilon will be > 0, TODO value experimental
 epsilonY = (puzzle.ai.epsilon, epsilonEndVal) # start and end epsilon value
-# decay rate for epsilon so it hits 0 after epsilonX[1] time steps
+# decay rate for epsilon so it hits the minimum value after epsilonX[1] time steps
 epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 
 puzzle.startTime = datetime.now()
 print("puzzle start: %s" %puzzle.startTime)
 
-# pre train the player
+# train the player
 #while puzzle.age < learningSteps:
 while True:
     # calls update on puzzle (do action and learn) and then updates score and redraws screen

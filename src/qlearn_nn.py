@@ -1,5 +1,4 @@
 import random
-import tensorflow as tf
 import numpy as np
 import nn
 
@@ -21,12 +20,12 @@ class QLearn:
         self.actions = range(self.actionsSize)
         self.inputSize = self.actionsSize**2
 
-        if self.puzzleSize == 2:
+        '''if self.puzzleSize == 2:
             self.hiddenLayerSize = self.inputSize**2
         elif self.puzzleSize == 3:
             self.hiddenLayerSize = self.inputSize**1.5 # TODO not set yet .. 2 makes it reaaally slow...
         elif self.puzzleSize == 4:
-            self.hiddenLayerSize = self.inputSize**1.4 # TODO not set yet
+            self.hiddenLayerSize = self.inputSize**1.4 # TODO not set yet'''
 
         # create one nn per action:
         self.networks = {}

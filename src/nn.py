@@ -6,7 +6,7 @@ class nn:
         self.actionsSize = puzzleSize ** 2
         self.inputSize = self.actionsSize ** 2
 
-        self.hiddenLayerSize = self.inputSize**1.5 # TODO experimental
+        self.hiddenLayerSize = self.inputSize#**1.5 # TODO experimental
 
         tf.reset_default_graph()
 
