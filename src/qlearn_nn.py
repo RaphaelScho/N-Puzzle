@@ -20,56 +20,12 @@ class QLearn:
         self.actions = range(self.actionsSize)
         self.inputSize = self.actionsSize**2
 
-        '''if self.puzzleSize == 2:
-            self.hiddenLayerSize = self.inputSize**2
-        elif self.puzzleSize == 3:
-            self.hiddenLayerSize = self.inputSize**1.5 # TODO not set yet .. 2 makes it reaaally slow...
-        elif self.puzzleSize == 4:
-            self.hiddenLayerSize = self.inputSize**1.4 # TODO not set yet'''
-
         # create one nn per action:
         self.networks = {}
         for action in self.actions:
             net = nn.nn(puzzleSize = self.puzzleSize, alpha = self.alpha)
             self.networks[action] = net
-            #tf.reset_default_graph()
-            #self.sess = tf.Session()
-            #init = tf.global_variables_initializer()
-            #init_l = tf.local_variables_initializer()
-            #self.sess.run(init)
-            #self.sess.run(init_l)
 
-            # These lines establish the feed-forward part of the network used to choose actions
-            ##self.inputs1 = tf.placeholder(shape=[1, self.actionsSize], dtype=tf.float32)
-            #self.inputs1 = tf.placeholder(shape=[1, self.actionsSize**2], dtype=tf.float32)
-            #self.W = tf.Variable(tf.random_uniform([self.actionsSize**2, self.actionsSize], 0, 0.01))
-            #self.sess.run(self.W.initializer)
-            #self.Qout = tf.matmul(self.inputs1, self.W)
-            #self.predict = tf.argmax(self.Qout, 1)
-
-            # hidden layers instead
-            #self.inputs1 = tf.placeholder(shape=[1,self.inputSize], dtype=tf.float32)
-            #fc1 = tf.layers.dense(self.inputs1, self.hiddenLayerSize, activation=tf.nn.relu)
-            #fc2 = tf.layers.dense(fc1, self.hiddenLayerSize, activation=tf.nn.relu)
-            #self.Qout = tf.layers.dense(fc2, self.actionsSize)
-            #self.predict = tf.argmax(self.Qout, 1)
-
-
-            # Below we obtain the loss by taking the sum of squares difference between the target and prediction Q values.
-            #self.nextQ = tf.placeholder(shape=[1, self.actionsSize], dtype=tf.float32)
-            #self.loss = tf.reduce_sum(tf.square(tf.clip_by_value(self.nextQ - self.Qout,-2,2)))
-            #self.trainer = tf.train.GradientDescentOptimizer(learning_rate=self.alpha)
-            #self.updateModel = self.trainer.minimize(self.loss)
-            #self._var_init = tf.global_variables_initializer()
-            #self.sess.run(self._var_init)
-
-            #self.batch = []
-            #self.batchSize = 0
-            # TODO those values might also need to change based on puzzle size
-            #self.maxBatchSize = 5000 # how many [state,action,reward,newstate] tuples to remember
-            #self.learningSteps = 1000  # after how many actions should a batch be learned
-            #self.learnSize = 1500 # how many of those tuples to randomly choose when learning
-            #self.age = 0
 
         # TODO those values might also need to change based on puzzle size
         self.maxBatchSize = 500  # how many [state,action,reward,newstate] tuples to remember
@@ -79,19 +35,12 @@ class QLearn:
         self.batch = []
         self.batchSize = 0
 
-        #self.chosenActions = {}
-        #self.chosenActions[0] = 0
-        #self.chosenActions[1] = 0
-        #self.chosenActions[2] = 0
-        #self.chosenActions[3] = 0
-
-
 
     # transform state representation using numbers from 0 to N^2-1 to representation using a vector on length N^2
     # for each cell: for N = 2 solution state [[1,2],[3,0]] looks like [[[0,1,0,0],[0,0,1,0]],[[0,0,0,1],[1,0,0,0]]]
     # which is simply represented as [0,1,0,0,0,0,1,0,0,0,0,1,1,0,0,0] and used as input for the NN
     def transformState(self, state):
-        rep = np.full((self.inputSize), 0)
+        rep = np.full(self.inputSize, 0)
         count = 0
         for y in range(self.puzzleSize):
             for x in range(self.puzzleSize):
@@ -102,16 +51,20 @@ class QLearn:
 
     def doLearning(self, oneD_state, action, reward, oneD_newstate):
         # Obtain the Q' values by feeding the new state through our network
-        allQ = self.networks[action].sess.run(self.networks[action].Qout,
-                                              feed_dict={self.networks[action].inputs: [oneD_state]})
-        targetQ = allQ
+        # this was originally because there was one network for all actions, but we only wanted to change one action,
+        # so we ran it through and then only changed the targetQ value for the one action (=output)
+        #allQ = self.networks[action].sess.run(self.networks[action].Qout,
+        #                                      feed_dict={self.networks[action].inputs: [oneD_state]})
+        #targetQ = allQ
+        targetQ = np.ndarray(shape=(1,1), dtype=float)
         if oneD_newstate is not None:
             # calculate Q1 for all actions and find maximum
             qList = []
             for a in self.actions:
                 Q1 = self.networks[a].sess.run(self.networks[a].Qout,
                                                 feed_dict={self.networks[a].inputs: [oneD_newstate]})
-                qList.append(np.amax(Q1))
+                #qList.append(np.amax(Q1))
+                qList.append(Q1[0][0])
             # Obtain maxQ' and set our target value for chosen action.
             #maxQ1 = np.amax(Q1)
             maxQ1 = max(qList)
@@ -119,7 +72,7 @@ class QLearn:
         else:
             targetQ[0] = reward
 
-        # Train our network using target and predicted Q values
+        # Train network using target and predicted Q values
         # _, W1 = self.sess.run([self.updateModel, self.W], feed_dict={self.inputs1: [oneD_state], self.nextQ: targetQ})
         self.networks[action].sess.run(self.networks[action].updateModel,
                                        feed_dict={self.networks[action].inputs: [oneD_state],
@@ -140,7 +93,7 @@ class QLearn:
         # add to that the reward that was received for entering that state and you have the states Q-value
 
     # use Q-learning formula to update nn when an action is taken
-    def learn(self, state, action, reward, newstate):
+    def learn(self, state, action, reward, newstate, isSolved):
         #oneD_state = np.asarray(state).flatten()
         oneD_state = self.transformState(state)
         #oneD_newstate = np.asarray(newstate).flatten()
@@ -158,20 +111,20 @@ class QLearn:
         # TODO it uses less space to store states in original form and only transform when chosen,
         # increases calc time though since states are chosen 1.5 times on average
 
-        if self.age % self.learningSteps == 0:
-            #print(self.chosenActions)
-            #self.chosenActions[0] = 0
-            #self.chosenActions[1] = 0
-            #self.chosenActions[2] = 0
-            #self.chosenActions[3] = 0
-
+        chosenBatch = []
+        if isSolved:
+            chosenBatch = self.batch[:-self.learnSize:-1]
+            self.batch = []
+            self.batchSize = 0
+        elif self.age % self.learningSteps == 0:
             if self.batchSize < self.learnSize:
                 chosenBatch = random.sample(self.batch, self.batchSize)
             else:
                 chosenBatch = random.sample(self.batch, self.learnSize)
-            for i in range(len(chosenBatch)):
-                b = chosenBatch[i]
-                self.doLearning(b[0],b[1],b[2],b[3])
+
+        for i in range(len(chosenBatch)):
+            b = chosenBatch[i]
+            self.doLearning(b[0], b[1], b[2], b[3])
 
     # returns the best action based on knowledge in nn
     # chance to return a random action = self.epsilon

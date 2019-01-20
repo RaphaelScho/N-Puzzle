@@ -236,7 +236,7 @@ class Puzzle():
 
             reward = rewardVal
             if self.lastState is not None:
-                self.ai.learn(self.lastState, self.lastAction, reward, None)
+                self.ai.learn(self.lastState, self.lastAction, reward, None, True)
             self.lastState = None
 
             self.state = self.randomizer.makeRandomPuzzle()
@@ -247,7 +247,7 @@ class Puzzle():
             return
 
         if self.lastState is not None:
-            self.ai.learn(self.lastState, self.lastAction, reward, currentState)
+            self.ai.learn(self.lastState, self.lastAction, reward, currentState, False)
 
         # get updated state (puzzle might have been recreated after being solved), choose a new action and execute it
         currentState = deepcopy(self.state)
