@@ -1,4 +1,6 @@
 import tensorflow as tf
+
+
 class nn:
     def __init__(self, puzzleSize, alpha):
         self.alpha = alpha
@@ -6,7 +8,7 @@ class nn:
         self.actionsSize = puzzleSize ** 2
         self.inputSize = self.actionsSize ** 2
 
-        self.hiddenLayerSize = self.inputSize#**1.5 # TODO experimental
+        self.hiddenLayerSize = self.inputSize  # **1.5 # TODO experimental
 
         tf.reset_default_graph()
 
@@ -19,7 +21,7 @@ class nn:
         # layers
         self.inputs = tf.placeholder(shape=[1, self.inputSize], dtype=tf.float32)
         fc1 = tf.layers.dense(self.inputs, self.hiddenLayerSize, activation=tf.nn.relu)
-        #fc2 = tf.layers.dense(fc1, self.hiddenLayerSize, activation=tf.nn.relu)
+        # fc2 = tf.layers.dense(fc1, self.hiddenLayerSize, activation=tf.nn.relu)
         self.Qout = tf.layers.dense(fc1, 1)
         self.predict = tf.argmax(self.Qout, 1)
 
@@ -30,4 +32,3 @@ class nn:
         self.updateModel = self.trainer.minimize(self.loss)
         self._var_init = tf.global_variables_initializer()
         self.sess.run(self._var_init)
-
