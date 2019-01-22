@@ -21,7 +21,7 @@ else:
     import qlearn as learner
 
 if puzzleSize == 2:
-    learningSteps = 40000   # over how many steps epsilon is reduced to its final value
+    epsilonSteps = 40000   # over how many steps epsilon is reduced to its final value
     epsilonStartVal = 0.05   # chance to take a random action
     epsilonEndVal = 0.01
     alphaVal = 0.01          # learning rate
@@ -29,7 +29,7 @@ if puzzleSize == 2:
     rewardVal = 5           # reward for solving the puzzle
 
 elif puzzleSize == 3:
-    learningSteps = 1000000
+    epsilonSteps = 1000000
     epsilonStartVal = 0.05
     epsilonEndVal = 0.01
     alphaVal = 0.01
@@ -38,7 +38,7 @@ elif puzzleSize == 3:
 
 # TODO no set yet
 elif puzzleSize == 4:
-    learningSteps = 500000000
+    epsilonSteps = 500000000
     epsilonStartVal = 0.8
     epsilonEndVal = 0.01
     alphaVal = 0.1
@@ -89,6 +89,9 @@ class Puzzle():
         self.totalMoves = 0
         self.totalTime = 0
         self.solveCount = 0
+
+        self.currentManhattan = self.getManhattanDistance(self.state, self.solution)
+        self.lastManhattan = self.currentManhattan
 
     # create neighbours dict which has a list of neighbour-positions for each position
     def initNeighbours(self):
@@ -186,8 +189,7 @@ class Puzzle():
         # TODO maybe it is better to not selectively punish this
         # if last action was not legal -> useless action -> punish
         if(self.lastState == currentState):
-            reward = -2
-            pass
+            reward = -3
 
         # observe the reward and update the Q-value
         if self.isPuzzleSolved():
@@ -247,7 +249,11 @@ class Puzzle():
             return
 
         if self.lastState is not None:
-            self.ai.learn(self.lastState, self.lastAction, reward, currentState, False)
+            self.currentManhattan = self.getManhattanDistance(currentState, self.solution)
+            manhattanDif = self.lastManhattan - self.currentManhattan
+            self.ai.learn(self.lastState, self.lastAction, reward + manhattanDif*0.2, currentState, False)
+            self.lastManhattan = self.currentManhattan
+
 
         # get updated state (puzzle might have been recreated after being solved), choose a new action and execute it
         currentState = deepcopy(self.state)
@@ -268,6 +274,20 @@ class Puzzle():
     #def getCellValueByIndex(self, position):
     #    return self.state[position]
 
+    def getManhattanDistance(self, state, solution):
+        dist = 0
+        for y in range(0, self.puzzleSize):
+            for x in range(0, self.puzzleSize):
+                pos = state[y][x]
+
+                sol_yx = [(i, sol.index(pos))
+                          for i, sol in enumerate(solution)
+                          if pos in sol]
+
+                dif = abs(y-sol_yx[0][0]) + abs(x - sol_yx[0][1])
+                dist += dif
+        return dist
+
 
 # ----------------------------------
 # start learning
@@ -276,7 +296,7 @@ class Puzzle():
 puzzle = Puzzle(puzzleSize=puzzleSize)
 
 # learning factor
-epsilonX = (0, learningSteps)  # for how many time steps epsilon will be > 0, TODO value experimental
+epsilonX = (0, epsilonSteps)  # for how many time steps epsilon will be > 0, TODO value experimental
 epsilonY = (puzzle.ai.epsilon, epsilonEndVal) # start and end epsilon value
 # decay rate for epsilon so it hits the minimum value after epsilonX[1] time steps
 epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
@@ -291,7 +311,7 @@ while True:
     puzzle.update()
 
     # every 100 time steps, decay epsilon
-    if (puzzle.age % 100 == 0):
+    if (puzzle.solved > 0) & (puzzle.age % 100 == 0):
         # this gradually decreases epsilon from epsilonY[0] to epsilonY[1] over the course of epsilonX[0] to [1]
         # -> at epsilonX[1] epsilon will reach epsilonY[1] and stay there
         puzzle.ai.epsilon = (epsilonY[0] if puzzle.age < epsilonX[0] else
@@ -300,10 +320,11 @@ while True:
         # alternatively just multiply by some factor... harder to set right I guess
         # puzzle.ai.epsilon *= 0.9995
 
-    # every 10.000 steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next 10.000 steps
-    if puzzle.age % 1000 == 0:
-        print(puzzle.age)
-        print(puzzle.ai.epsilon)
+    # every .. steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next ... steps
+    if puzzle.age % 300 == 0:
+        print("\nage: " + str(puzzle.age))
+        print("epsilon: " + str(puzzle.ai.epsilon))
+        print("manhattan: " + str(puzzle.getManhattanDistance(puzzle.state, puzzle.solution)))
 
         # print puzzle dict (for qlearn.py)
         #if(len(puzzle.ai.q) > 2200000):

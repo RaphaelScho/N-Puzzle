@@ -6,10 +6,9 @@ import nn
 class QLearn:
     def __init__(self, puzzleSize, epsilon, alpha, gamma):
 
-
         # exploration factor between 0-1 (chance of taking a random action)
         self.epsilon = epsilon
-        # learning rate between 0-1 (0 means never update Q-values)
+        # learning rate between 0-1 (0 means never update Q-values, 1 means discard old value)
         self.alpha = alpha
         # discount factor between 0-1 (higher means the algorithm looks farther into the future
         # at 1 infinite rewards possible -> dont go to 1)
@@ -30,10 +29,21 @@ class QLearn:
         # TODO those values might also need to change based on puzzle size
         self.maxBatchSize = 500  # how many [state,action,reward,newstate] tuples to remember
         self.learningSteps = 100  # after how many actions should a batch be learned
-        self.learnSize = 150  # how many of those tuples to randomly choose when learning
+        self.learnSize = 100  # how many of those tuples to randomly choose when learning
         self.age = 0
         self.batch = []
         self.batchSize = 0
+
+        self.chosenActions = {}
+        self.chosenActions[0] = 0
+        self.chosenActions[1] = 0
+        self.chosenActions[2] = 0
+        self.chosenActions[3] = 0
+        self.chosenActions[4] = 0
+        self.chosenActions[5] = 0
+        self.chosenActions[6] = 0
+        self.chosenActions[7] = 0
+        self.chosenActions[8] = 0
 
 
     # transform state representation using numbers from 0 to N^2-1 to representation using a vector on length N^2
@@ -108,23 +118,24 @@ class QLearn:
             self.batchSize += 1
         self.batch.append([oneD_state, action, reward, oneD_newstate])
 
-        # TODO it uses less space to store states in original form and only transform when chosen,
-        # increases calc time though since states are chosen 1.5 times on average
+        # TODO it uses less space to store states in original form and only transform when chosen
 
-        chosenBatch = []
         if isSolved:
             chosenBatch = self.batch[:-self.learnSize:-1]
             self.batch = []
             self.batchSize = 0
+            for i in range(len(chosenBatch)):
+                b = chosenBatch[i]
+                self.doLearning(b[0], b[1], b[2], b[3])
+
         elif self.age % self.learningSteps == 0:
             if self.batchSize < self.learnSize:
                 chosenBatch = random.sample(self.batch, self.batchSize)
             else:
                 chosenBatch = random.sample(self.batch, self.learnSize)
-
-        for i in range(len(chosenBatch)):
-            b = chosenBatch[i]
-            self.doLearning(b[0], b[1], b[2], b[3])
+            for i in range(len(chosenBatch)):
+                b = chosenBatch[i]
+                self.doLearning(b[0], b[1], b[2], b[3])
 
     # returns the best action based on knowledge in nn
     # chance to return a random action = self.epsilon
@@ -143,13 +154,5 @@ class QLearn:
                                                       feed_dict={self.networks[a].inputs: [oneD_state]})
                 actList.append(allQ[0][0])
             action = actList.index(max(actList))
-            #print(actList)
-            #action = act[0]
-            #if self.epsilon < 0.05:
-            #    print("action %f" %(action))
-            #    print("allQ")
-            #    print(allQ)
-
-        #self.chosenActions[action] +=1
+        self.chosenActions[action] += 1
         return action
-
