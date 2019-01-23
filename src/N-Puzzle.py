@@ -30,11 +30,11 @@ if puzzleSize == 2:
 
 # TODO not set yet
 elif puzzleSize == 3:
-    learningSteps = 1000000
-    epsilonStartVal = 0.8
+    learningSteps = 50000000
+    epsilonStartVal = 0.85
     epsilonEndVal = 0.01
     alphaVal = 0.1
-    gammaVal = 0.93
+    gammaVal = 0.99
     rewardVal = 100
 
 # TODO no set yet
@@ -318,9 +318,10 @@ while True:
         # puzzle.ai.epsilon *= 0.9995
 
     # every 10.000 steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next 10.000 steps
-    if puzzle.age % 1000 == 0:
-        print(puzzle.age)
-        print(puzzle.ai.epsilon)
+    if puzzle.age % 100000 == 0:
+        print("age: %d \tepsilon: %f" %(puzzle.age, puzzle.ai.epsilon))
+        # print(puzzle.age)
+        # print(puzzle.ai.epsilon)
 
         # print puzzle dict (for qlearn.py)
         #if(len(puzzle.ai.q) > 2200000):

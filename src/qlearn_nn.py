@@ -21,12 +21,25 @@ class QLearn:
         self.actions = range(self.actionsSize)
         self.inputSize = self.actionsSize**2
 
+        self.batch = []
+        self.batchSize = 0
+        self.age = 0
+
         if self.puzzleSize == 2:
             self.hiddenLayerSize = self.inputSize**2
+            self.maxBatchSize = 5000  # how many [state,action,reward,newstate] tuples to remember
+            self.learningSteps = 1000  # after how many actions should a batch be learned
+            self.learnSize = 1500  # how many of those tuples to randomly choose when learning
         elif self.puzzleSize == 3:
-            self.hiddenLayerSize = self.inputSize**1.5 # TODO not set yet .. 2 makes it reaaally slow...
+            self.hiddenLayerSize = self.inputSize**1.4 # TODO not set yet .. 2 makes it reaaally slow...
+            self.maxBatchSize = 100000  # how many [state,action,reward,newstate] tuples to remember
+            self.learningSteps = 20000  # after how many actions should a batch be learned
+            self.learnSize = 30000  # how many of those tuples to randomly choose when learning
         elif self.puzzleSize == 4:
             self.hiddenLayerSize = self.inputSize**1.4 # TODO not set yet
+            self.maxBatchSize = 0  # how many [state,action,reward,newstate] tuples to remember
+            self.learningSteps = 0  # after how many actions should a batch be learned
+            self.learnSize = 0  # how many of those tuples to randomly choose when learning
 
         tf.reset_default_graph()
 
@@ -59,14 +72,6 @@ class QLearn:
         self.updateModel = self.trainer.minimize(self.loss)
         self._var_init = tf.global_variables_initializer()
         self.sess.run(self._var_init)
-
-        self.batch = []
-        self.batchSize = 0
-        # TODO those values might also need to change based on puzzle size
-        self.maxBatchSize = 5000 # how many [state,action,reward,newstate] tuples to remember
-        self.learningSteps = 1000  # after how many actions should a batch be learned
-        self.learnSize = 1500 # how many of those tuples to randomly choose when learning
-        self.age = 0
 
 
 
