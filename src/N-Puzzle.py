@@ -249,10 +249,11 @@ class Puzzle():
             return
 
         if self.lastState is not None:
-            self.currentManhattan = self.getManhattanDistance(currentState, self.solution)
-            manhattanDif = self.lastManhattan - self.currentManhattan
-            self.ai.learn(self.lastState, self.lastAction, reward + manhattanDif*0.2, currentState, False)
-            self.lastManhattan = self.currentManhattan
+            #self.currentManhattan = self.getManhattanDistance(currentState, self.solution)
+            #manhattanDif = self.lastManhattan - self.currentManhattan
+            #self.ai.learn(self.lastState, self.lastAction, reward + manhattanDif*0.2, currentState, False)
+            self.ai.learn(self.lastState, self.lastAction, reward, currentState, False)
+            #self.lastManhattan = self.currentManhattan
 
 
         # get updated state (puzzle might have been recreated after being solved), choose a new action and execute it
