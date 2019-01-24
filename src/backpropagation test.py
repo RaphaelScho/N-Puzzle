@@ -26,6 +26,16 @@ w6 = 0.7
 w7 = 0.6
 w8 = 0.2
 
+'''
+[i1] - w1 - [h1] - w5 - [o1]
+    \ w2    /   \ w6    /
+      \   /       \   /
+        X           X
+      /   \       /   \
+    / w3    \   / w7    \
+[i2] - w4 - [h2] - w8 - [o2]
+'''
+
 def sigmoid(x):
     return 1/(1+math.e**(-x))
 
@@ -65,12 +75,15 @@ print("d2: " + str(d2))
 print("\n")
 
 def update_w(x):
+    # new w5 is old w5 - learning rate * outputnode1-error * output of connected previous node
     new_w5 = w5 - a*d1*h1
     new_w6 = w6 - a*d1*h2
     new_w7 = w7 - a*d2*h1
     new_w8 = w8 - a*d2*h2
 
     if x == 1:
+        # new w1 is old w1 - a * output of connected input node * (o1-error*w5) * (o2-error*w7)
+        # so: learn * output of input node * Product of (receiving node error * weight of connection to that node) for each receiving node
         new_w1 = w1 - a * i1_1 * (d1 * w5) * (d2 * w7)
         new_w2 = w2 - a * i2_1 * (d1 * w5) * (d2 * w7)
         new_w3 = w3 - a * i1_1 * (d1 * w6) * (d2 * w8)
