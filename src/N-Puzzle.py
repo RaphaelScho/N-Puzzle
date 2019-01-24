@@ -29,12 +29,12 @@ if puzzleSize == 2:
     rewardVal = 5           # reward for solving the puzzle
 
 elif puzzleSize == 3:
-    epsilonSteps = 1000000
-    epsilonStartVal = 0.05
+    epsilonSteps = 100000
+    epsilonStartVal = 0.5
     epsilonEndVal = 0.01
     alphaVal = 0.01
     gammaVal = 0.99
-    rewardVal = 100
+    rewardVal = 1000
 
 # TODO no set yet
 elif puzzleSize == 4:
@@ -322,7 +322,7 @@ while True:
         # puzzle.ai.epsilon *= 0.9995
 
     # every .. steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next ... steps
-    if puzzle.age % 300 == 0:
+    if puzzle.age % 1000 == 0:
         print("\nage: " + str(puzzle.age))
         print("epsilon: " + str(puzzle.ai.epsilon))
         print("manhattan: " + str(puzzle.getManhattanDistance(puzzle.state, puzzle.solution)))
