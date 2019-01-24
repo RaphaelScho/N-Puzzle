@@ -228,9 +228,9 @@ class Puzzle():
             #print(("avg moves: %d \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \t\tepsilon: %f \tsolved: %f"
             #      %(1.0*sum(self.movesList)/len(self.movesList), 1.0*sum(self.timeList)/len(self.timeList),
             #        self.movesDone, timeDif, self.ai.epsilon, self.solved)).expandtabs(18))
-            print(("avg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \t\tepsilon: %f \tsolved: %d"
+            print(("\navg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \tactions: %d \t\tepsilon: %f \tsolved: %d"
                    % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
-                      self.movesDone, timeDif, self.ai.epsilon, self.solved)).expandtabs(18))
+                      self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
             #print(self.ai.q)
             self.movesDone = 0
             self.actionsTaken = 0
