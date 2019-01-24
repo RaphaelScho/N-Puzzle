@@ -29,8 +29,8 @@ if puzzleSize == 2:
     rewardVal = 5           # reward for solving the puzzle
 
 elif puzzleSize == 3:
-    epsilonSteps = 100000
-    epsilonStartVal = 0.5
+    epsilonSteps = 6000000
+    epsilonStartVal = 0.2
     epsilonEndVal = 0.01
     alphaVal = 0.01
     gammaVal = 0.99
@@ -92,13 +92,6 @@ class Puzzle():
 
         self.currentManhattan = self.getManhattanDistance(self.state, self.solution)
         self.lastManhattan = self.currentManhattan
-
-        self.emptyCellCurrentManhattan = self.getQuickManhattanDistance(self.state, self.solution,
-                                                                        self.emptyCellPos[1], self.emptyCellPos[0])
-        self.emptyCellLastManhattan = self.emptyCellCurrentManhattan
-
-        self.moveCellCurrentManhattan = 0
-        self.moveCellLastManhattan = 0
 
     # create neighbours dict which has a list of neighbour-positions for each position
     def initNeighbours(self):
@@ -255,13 +248,7 @@ class Puzzle():
             return
 
         if self.lastState is not None:
-            self.emptyCellCurrentManhattan = self.getQuickManhattanDistance(self.state, self.solution,
-                                                                            self.emptyCellPos[1], self.emptyCellPos[0])
-            emptyCellManhattanDif = self.emptyCellLastManhattan - self.emptyCellCurrentManhattan
-            moveCellManhattanDif = self.moveCellLastManhattan - self.moveCellCurrentManhattan
-            quickManhattanDif = -1 * (emptyCellManhattanDif + moveCellManhattanDif)
-            self.ai.learn(self.lastState, self.lastAction, reward + quickManhattanDif*0.2, currentState, False)
-            self.emptyCellLastManhattan = self.emptyCellCurrentManhattan
+            self.ai.learn(self.lastState, self.lastAction, reward, currentState, False)
 
 
         # get updated state (puzzle might have been recreated after being solved), choose a new action and execute it
@@ -271,18 +258,8 @@ class Puzzle():
         self.lastState = deepcopy(currentState)
         self.lastAction = action
 
-        self.moveCellLastManhattan = self.getQuickManhattanDistance(self.state, self.solution,
-                                                                    self.positionConverter[action][1],
-                                                                    self.positionConverter[action][0])
-        prevEmptyCellPos = self.emptyCellPos
         # move chosen tile, if it can not be moved do nothing
-        moved = self.moveTile(action)
-        if moved:
-            self.moveCellCurrentManhattan = self.getQuickManhattanDistance(self.state, self.solution,
-                                                                       prevEmptyCellPos[1],
-                                                                       prevEmptyCellPos[0])
-        else:
-            self.moveCellCurrentManhattan = self. moveCellLastManhattan
+        self.moveTile(action)
 
     def isPuzzleSolved(self):
         return (self.state == self.solution)
@@ -306,16 +283,6 @@ class Puzzle():
                 dif = abs(y-sol_yx[0][0]) + abs(x - sol_yx[0][1])
                 dist += dif
         return dist
-
-    def getQuickManhattanDistance(self, state, solution, y, x):
-        pos = state[y][x]
-
-        sol_yx = [(i, sol.index(pos))
-                  for i, sol in enumerate(solution)
-                  if pos in sol]
-
-        dif = abs(y - sol_yx[0][0]) + abs(x - sol_yx[0][1])
-        return dif
 
 
 # ----------------------------------
