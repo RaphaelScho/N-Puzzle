@@ -302,19 +302,23 @@ print("puzzle start: %s" %puzzle.startTime)
 
 # train the player
 #while puzzle.age < learningSteps:
+firstVictoryAge = 0
 while True:
     # calls update on puzzle (do action and learn) and then updates score and redraws screen
     puzzle.update()
 
-    # every 100 time steps, decay epsilon
+    # every 100 time steps, decay epsilon (only after first puzzle is solved)
     if (puzzle.solved > 0) & (puzzle.age % 100 == 0):
+        relevantAge = puzzle.age - firstVictoryAge
         # this gradually decreases epsilon from epsilonY[0] to epsilonY[1] over the course of epsilonX[0] to [1]
         # -> at epsilonX[1] epsilon will reach epsilonY[1] and stay there
-        puzzle.ai.epsilon = (epsilonY[0] if puzzle.age < epsilonX[0] else
-                             epsilonY[1] if puzzle.age > epsilonX[1] else
-                             epsilonM * (puzzle.age - epsilonX[0]) + epsilonY[0])
+        puzzle.ai.epsilon = (epsilonY[0] if relevantAge < epsilonX[0] else
+                             epsilonY[1] if relevantAge > epsilonX[1] else
+                             epsilonM * (relevantAge - epsilonX[0]) + epsilonY[0])
         # alternatively just multiply by some factor... harder to set right I guess
         # puzzle.ai.epsilon *= 0.9995
+    elif puzzle.solved < 0:
+        firstVictoryAge = puzzle.age + 1
 
     # every .. steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next ... steps
     if puzzle.age % 1000 == 0:
