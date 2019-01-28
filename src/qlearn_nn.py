@@ -27,24 +27,14 @@ class QLearn:
 
 
         # TODO those values might also need to change based on puzzle size
-        self.maxBatchSize = 500  # how many [state,action,reward,newstate] tuples to remember
-        self.learningSteps = 100  # after how many actions should a batch be learned
-        self.learnSize = 100  # how many of those tuples to randomly choose when learning
+        self.maxBatchSize = 100000  # how many [state,action,reward,newstate] tuples to remember
+        self.learningSteps = 10  # after how many actions should a batch be learned
+        self.learnSize = 15  # how many of those tuples to randomly choose when learning
         self.age = 0
         self.batch = []
         self.batchSize = 0
 
-        self.chosenActions = {}
-        self.chosenActions[0] = 0
-        self.chosenActions[1] = 0
-        self.chosenActions[2] = 0
-        self.chosenActions[3] = 0
-        self.chosenActions[4] = 0
-        self.chosenActions[5] = 0
-        self.chosenActions[6] = 0
-        self.chosenActions[7] = 0
-        self.chosenActions[8] = 0
-
+        self.chosenActions = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0}
 
     # transform state representation using numbers from 0 to N^2-1 to representation using a vector on length N^2
     # for each cell: for N = 2 solution state [[1,2],[3,0]] looks like [[[0,1,0,0],[0,0,1,0]],[[0,0,0,1],[1,0,0,0]]]
@@ -121,12 +111,15 @@ class QLearn:
         # TODO it uses less space to store states in original form and only transform when chosen
 
         if isSolved:
+            origAlpha = self.alpha
+            self.alpha = 0.1
             chosenBatch = self.batch[:-self.learnSize:-1]
             self.batch = []
             self.batchSize = 0
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
                 self.doLearning(b[0], b[1], b[2], b[3])
+            self.alpha = origAlpha
 
         elif self.age % self.learningSteps == 0:
             if self.batchSize < self.learnSize:
