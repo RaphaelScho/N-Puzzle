@@ -39,11 +39,11 @@ elif puzzleSize == 3:
 # TODO no set yet
 elif puzzleSize == 4:
     epsilonSteps = 500000000
-    epsilonStartVal = 0.8
+    epsilonStartVal = 0.2
     epsilonEndVal = 0.01
-    alphaVal = 0.1
-    gammaVal = 0.99
-    rewardVal = 500
+    alphaVal = 0.01
+    gammaVal = 0.999
+    rewardVal = 5000
 
 
 # ------------------------------------------------------------ #
@@ -90,8 +90,8 @@ class Puzzle():
         self.totalTime = 0
         self.solveCount = 0
 
-        self.currentManhattan = self.getManhattanDistance(self.state, self.solution)
-        self.lastManhattan = self.currentManhattan
+        #self.currentManhattan = self.getManhattanDistance(self.state, self.solution)
+        #self.lastManhattan = self.currentManhattan
 
     # create neighbours dict which has a list of neighbour-positions for each position
     def initNeighbours(self):
@@ -321,10 +321,10 @@ while True:
         firstVictoryAge = puzzle.age + 1
 
     # every .. steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next ... steps
-    if puzzle.age % 1000 == 0:
+    if puzzle.age % 3000 == 0:
         print("\nage: " + str(puzzle.age))
         print("epsilon: " + str(puzzle.ai.epsilon))
-        print("manhattan: " + str(puzzle.getManhattanDistance(puzzle.state, puzzle.solution)))
+        #print("manhattan: " + str(puzzle.getManhattanDistance(puzzle.state, puzzle.solution)))
 
         # print puzzle dict (for qlearn.py)
         #if(len(puzzle.ai.q) > 2200000):
