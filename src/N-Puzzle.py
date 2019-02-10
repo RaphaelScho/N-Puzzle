@@ -7,8 +7,8 @@ from copy import deepcopy
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
 
 
-nn_learner = True   # use neural network (True) or lookup dictionary (False)
-puzzleSize = 3      # Size 3 means 3x3 puzzle
+nn_learner = True   # use neural network (True) or dictionary (False)
+puzzleSize = 2      # Size 3 means 3x3 puzzle
 
 
 # ------------------------------------------------------------ #
@@ -21,12 +21,12 @@ else:
     import qlearn as learner
 
 if puzzleSize == 2:
-    epsilonSteps = 40000   # over how many steps epsilon is reduced to its final value
+    epsilonSteps = 5000   # over how many steps epsilon is reduced to its final value
     epsilonStartVal = 0.05   # chance to take a random action
     epsilonEndVal = 0.01
     alphaVal = 0.01          # learning rate
-    gammaVal = 0.95          # discount factor for future rewards
-    rewardVal = 5           # reward for solving the puzzle
+    gammaVal = 0.25          # discount factor for future rewards
+    rewardVal = 1           # reward for solving the puzzle
 
 elif puzzleSize == 3:
     epsilonSteps = 6000000
@@ -183,12 +183,12 @@ class Puzzle():
         # calculate the state of the surrounding cells (cat, cheese, wall, empty)
         currentState = deepcopy(self.state)
         # assign a reward of -1 by default
-        reward = -1
+        reward = -0.5
 
         # TODO maybe it is better to not selectively punish this
         # if last action was not legal -> useless action -> punish
         if(self.lastState == currentState):
-            reward = -3
+            reward = -1
 
         # observe the reward and update the Q-value
         if self.isPuzzleSolved():
@@ -206,7 +206,7 @@ class Puzzle():
                 self.totalTime = 0
                 self.totalMoves = 0
                 self.solveCount = 1
-                print("resetting calculation of average")
+                print("\nresetting calculation of average")
 
             # calculate rolling averages
             #if len(self.timeList)<10:
@@ -231,6 +231,7 @@ class Puzzle():
             print(("\navg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \tactions: %d \t\tepsilon: %f \tsolved: %d"
                    % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
                       self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
+            print(datetime.now())
             #print(self.ai.q)
             self.movesDone = 0
             self.actionsTaken = 0
@@ -321,9 +322,10 @@ while True:
         firstVictoryAge = puzzle.age + 1
 
     # every .. steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next ... steps
-    if puzzle.age % 3000 == 0:
+    if puzzle.age % 100000 == 0:
         print("\nage: " + str(puzzle.age))
         print("epsilon: " + str(puzzle.ai.epsilon))
+        print(datetime.now())
         #print("manhattan: " + str(puzzle.getManhattanDistance(puzzle.state, puzzle.solution)))
 
         # print puzzle dict (for qlearn.py)

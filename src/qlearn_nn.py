@@ -27,9 +27,12 @@ class QLearn:
 
 
         # TODO those values might also need to change based on puzzle size
-        self.maxBatchSize = 100000  # how many [state,action,reward,newstate] tuples to remember
-        self.learningSteps = 10  # after how many actions should a batch be learned
-        self.learnSize = 15  # how many of those tuples to randomly choose when learning
+        #self.maxBatchSize = 100000  # how many [state,action,reward,newstate] tuples to remember
+        self.maxBatchSize = 10000  # how many [state,action,reward,newstate] tuples to remember
+        #self.learningSteps = 15  # after how many actions should a batch be learned
+        self.learningSteps = 5
+        #self.learnSize = 20  # how many of those tuples to randomly choose when learning
+        self.learnSize = 6
         self.age = 0
         self.batch = []
         self.batchSize = 0
@@ -112,10 +115,10 @@ class QLearn:
 
         if isSolved:
             origAlpha = self.alpha
-            self.alpha = 0.1
+            #self.alpha = 0.05
             chosenBatch = self.batch[:-self.learnSize:-1]
-            self.batch = []
-            self.batchSize = 0
+            #self.batch = []
+            #self.batchSize = 0
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
                 self.doLearning(b[0], b[1], b[2], b[3])
