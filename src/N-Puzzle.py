@@ -21,7 +21,7 @@ else:
     import qlearn as learner
 
 if puzzleSize == 2:
-    epsilonSteps = 5000   # over how many steps epsilon is reduced to its final value
+    epsilonSteps = 10000   # over how many steps epsilon is reduced to its final value
     epsilonStartVal = 0.05   # chance to take a random action
     epsilonEndVal = 0.01
     alphaVal = 0.01          # learning rate
@@ -179,6 +179,7 @@ class Puzzle():
     # if this is not the first state after new puzzle created -> Q-learn(s,a,r,s')
     # choose an action and perform that action
     def update(self):
+        hasMoved = True
         # self.display.update()
         # calculate the state of the surrounding cells (cat, cheese, wall, empty)
         currentState = deepcopy(self.state)
@@ -189,6 +190,7 @@ class Puzzle():
         # if last action was not legal -> useless action -> punish
         if(self.lastState == currentState):
             reward = -1
+            hasMoved = False
 
         # observe the reward and update the Q-value
         if self.isPuzzleSolved():
@@ -238,7 +240,7 @@ class Puzzle():
 
             reward = rewardVal
             if self.lastState is not None:
-                self.ai.learn(self.lastState, self.lastAction, reward, None, True)
+                self.ai.learn(self.lastState, self.lastAction, reward, None, True, hasMoved)
             self.lastState = None
 
             self.state = self.randomizer.makeRandomPuzzle()
@@ -249,7 +251,7 @@ class Puzzle():
             return
 
         if self.lastState is not None:
-            self.ai.learn(self.lastState, self.lastAction, reward, currentState, False)
+            self.ai.learn(self.lastState, self.lastAction, reward, currentState, False, hasMoved)
 
 
         # get updated state (puzzle might have been recreated after being solved), choose a new action and execute it

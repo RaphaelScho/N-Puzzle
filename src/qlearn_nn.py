@@ -37,6 +37,9 @@ class QLearn:
         self.batch = []
         self.batchSize = 0
 
+        self.moveBatch = []
+        self.moveBatchSize = 0
+
         self.chosenActions = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0}
 
     # transform state representation using numbers from 0 to N^2-1 to representation using a vector on length N^2
@@ -96,7 +99,7 @@ class QLearn:
         # add to that the reward that was received for entering that state and you have the states Q-value
 
     # use Q-learning formula to update nn when an action is taken
-    def learn(self, state, action, reward, newstate, isSolved):
+    def learn(self, state, action, reward, newstate, isSolved, hasMoved):
         #oneD_state = np.asarray(state).flatten()
         oneD_state = self.transformState(state)
         #oneD_newstate = np.asarray(newstate).flatten()
@@ -111,12 +114,21 @@ class QLearn:
             self.batchSize += 1
         self.batch.append([oneD_state, action, reward, oneD_newstate])
 
+        if hasMoved:
+            if self.moveBatchSize > self.learnSize:
+                self.moveBatch.pop(0)
+            else:
+                self.moveBatchSize += 1
+            self.moveBatch.append([oneD_state, action, reward, oneD_newstate])
+
         # TODO it uses less space to store states in original form and only transform when chosen
 
         if isSolved:
             origAlpha = self.alpha
             #self.alpha = 0.05
-            chosenBatch = self.batch[:-self.learnSize:-1]
+            #chosenBatch = self.batch[:-self.learnSize:-1]
+            chosenBatch = self.moveBatch[::-1]
+
             #self.batch = []
             #self.batchSize = 0
             for i in range(len(chosenBatch)):
