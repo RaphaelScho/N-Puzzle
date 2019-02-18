@@ -32,12 +32,12 @@ class QLearn:
             self.maxBatchSize = 10000
             self.learningSteps = 5
             self.learnSize = 6
-            self.moveBatchSteps = 10
+            self.moveBatchSteps = 6
         if puzzleSize == 3:
             self.maxBatchSize = 100000  # how many [state,action,reward,newstate] tuples to remember
             self.learningSteps = 30  # after how many actions should a batch be learned
             self.learnSize = 40  # how many of those tuples to randomly choose when learning
-            self.moveBatchSteps = 100
+            self.moveBatchSteps = 150
 
         self.age = 0
         self.batch = []
@@ -147,10 +147,10 @@ class QLearn:
 
         elif self.age % self.learningSteps == 0:
             if self.batchSize < self.learnSize:
-                chosenBatch = random.sample(self.batch + self.winBatch, self.batchSize)
+                chosenBatch = random.sample((self.batch + self.winBatch), self.batchSize)
                 #chosenBatch = random.sample(self.batch, self.batchSize)
             else:
-                chosenBatch = random.sample(self.batch + self.winBatch, self.learnSize)
+                chosenBatch = random.sample((self.batch + self.winBatch), self.learnSize)
                 #chosenBatch = random.sample(self.batch, self.learnSize)
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
@@ -172,6 +172,9 @@ class QLearn:
                 act, allQ = self.networks[a].sess.run([self.networks[a].predict, self.networks[a].Qout],
                                                       feed_dict={self.networks[a].inputs: [oneD_state]})
                 actList.append(allQ[0][0])
-            action = actList.index(max(actList))
+            #action = actList.index(max(actList))
+            maxval = max(actList)
+            maxActions = [i for i, x in enumerate(actList) if x == maxval]
+            action = random.choice(maxActions)
         #self.chosenActions[action] += 1
         return action

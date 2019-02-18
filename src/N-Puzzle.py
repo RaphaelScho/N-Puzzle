@@ -25,8 +25,10 @@ if puzzleSize == 2:
     epsilonStartVal = 0.05   # chance to take a random action
     epsilonEndVal = 0.01
     alphaVal = 0.01          # learning rate
-    gammaVal = 0.5          # discount factor for future rewards
+    gammaVal = 0.9          # discount factor for future rewards
     rewardVal = 1           # reward for solving the puzzle
+    punishVal = -0.2        # punishment for doing nothing
+    defaultReward = -0.1    # for every step, to encourage faster solving
 
 elif puzzleSize == 3:
     epsilonSteps = 6000000
@@ -35,6 +37,8 @@ elif puzzleSize == 3:
     alphaVal = 0.01
     gammaVal = 0.99
     rewardVal = 1
+    punishVal = -0.2
+    defaultReward = -0.1
 
 # TODO no set yet
 elif puzzleSize == 4:
@@ -44,6 +48,8 @@ elif puzzleSize == 4:
     alphaVal = 0.01
     gammaVal = 0.999
     rewardVal = 5000
+    punishVal = -0.2
+    defaultReward = -0.1
 
 
 # ------------------------------------------------------------ #
@@ -183,13 +189,13 @@ class Puzzle():
         # self.display.update()
         # calculate the state of the surrounding cells (cat, cheese, wall, empty)
         currentState = deepcopy(self.state)
-        # assign a reward of -1 by default
-        reward = -0.5
+        # assign a reward of -something by default
+        reward = defaultReward
 
         # TODO maybe it is better to not selectively punish this
         # if last action was not legal -> useless action -> punish
         if(self.lastState == currentState):
-            reward = -1
+            reward = punishVal
             hasMoved = False
 
         # observe the reward and update the Q-value
@@ -266,12 +272,6 @@ class Puzzle():
 
     def isPuzzleSolved(self):
         return (self.state == self.solution)
-
-    #def getCellValue(self, x, y):
-    #    return self.state[self.puzzleSize * y + x]
-
-    #def getCellValueByIndex(self, position):
-    #    return self.state[position]
 
     def getManhattanDistance(self, state, solution):
         dist = 0
