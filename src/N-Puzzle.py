@@ -30,11 +30,11 @@ if puzzleSize == 2:
 
 elif puzzleSize == 3:
     epsilonSteps = 6000000
-    epsilonStartVal = 0.2
+    epsilonStartVal = 0.05
     epsilonEndVal = 0.01
     alphaVal = 0.01
     gammaVal = 0.99
-    rewardVal = 1000
+    rewardVal = 1
 
 # TODO no set yet
 elif puzzleSize == 4:

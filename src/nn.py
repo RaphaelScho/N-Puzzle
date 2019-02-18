@@ -8,8 +8,14 @@ class nn:
         self.actionsSize = puzzleSize ** 2
         self.inputSize = self.actionsSize ** 2
 
-        #self.hiddenLayerSize = self.inputSize ** 0.7  # **1.5 # TODO experimental
-        self.hiddenLayerSize = 10#21 # TODO experimental
+        # self.hiddenLayerSize = self.inputSize ** 0.7  # **1.5  # TODO experimental
+        if puzzleSize == 2:
+            #self.hiddenLayerSize = 10  # TODO experimental
+            self.hiddenLayerSize = 3  # TODO experimental
+        if puzzleSize == 3:
+            #self.hiddenLayerSize = 15  # TODO experimental
+            self.hiddenLayerSize = 4  # TODO experimental
+            self.hiddenLayerSize2 = 3  # TODO experimental
 
         tf.reset_default_graph()
 
@@ -22,8 +28,11 @@ class nn:
         # layers
         self.inputs = tf.placeholder(shape=[1, self.inputSize], dtype=tf.float32)
         fc1 = tf.layers.dense(self.inputs, self.hiddenLayerSize, activation=tf.nn.relu)
-        # fc2 = tf.layers.dense(fc1, self.hiddenLayerSize, activation=tf.nn.relu)
-        self.Qout = tf.layers.dense(fc1, 1)
+        if puzzleSize == 3:
+            #fc2 = tf.layers.dense(fc1, self.hiddenLayerSize2, activation=tf.nn.relu)
+            self.Qout = tf.layers.dense(fc1, 1)
+        else:
+            self.Qout = tf.layers.dense(fc1, 1)
         self.predict = tf.argmax(self.Qout, 1)
 
         # Below we obtain the loss by taking the sum of squares difference between the target and prediction Q values.

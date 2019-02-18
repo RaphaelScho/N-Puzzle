@@ -27,12 +27,15 @@ class QLearn:
 
 
         # TODO those values might also need to change based on puzzle size
-        #self.maxBatchSize = 100000  # how many [state,action,reward,newstate] tuples to remember
-        self.maxBatchSize = 10000  # how many [state,action,reward,newstate] tuples to remember
-        #self.learningSteps = 15  # after how many actions should a batch be learned
-        self.learningSteps = 5
-        #self.learnSize = 20  # how many of those tuples to randomly choose when learning
-        self.learnSize = 6
+        if puzzleSize == 2:
+            self.maxBatchSize = 10000
+            self.learningSteps = 5
+            self.learnSize = 6
+        if puzzleSize == 3:
+            self.maxBatchSize = 100000  # how many [state,action,reward,newstate] tuples to remember
+            self.learningSteps = 30  # after how many actions should a batch be learned
+            self.learnSize = 40  # how many of those tuples to randomly choose when learning
+
         self.age = 0
         self.batch = []
         self.batchSize = 0
@@ -40,7 +43,7 @@ class QLearn:
         self.moveBatch = []
         self.moveBatchSize = 0
 
-        self.chosenActions = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0}
+        #self.chosenActions = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0}
 
     # transform state representation using numbers from 0 to N^2-1 to representation using a vector on length N^2
     # for each cell: for N = 2 solution state [[1,2],[3,0]] looks like [[[0,1,0,0],[0,0,1,0]],[[0,0,0,1],[1,0,0,0]]]
@@ -162,5 +165,5 @@ class QLearn:
                                                       feed_dict={self.networks[a].inputs: [oneD_state]})
                 actList.append(allQ[0][0])
             action = actList.index(max(actList))
-        self.chosenActions[action] += 1
+        #self.chosenActions[action] += 1
         return action
