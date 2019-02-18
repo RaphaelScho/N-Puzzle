@@ -25,7 +25,7 @@ if puzzleSize == 2:
     epsilonStartVal = 0.05   # chance to take a random action
     epsilonEndVal = 0.01
     alphaVal = 0.01          # learning rate
-    gammaVal = 0.25          # discount factor for future rewards
+    gammaVal = 0.5          # discount factor for future rewards
     rewardVal = 1           # reward for solving the puzzle
 
 elif puzzleSize == 3:

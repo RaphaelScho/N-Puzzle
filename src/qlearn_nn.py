@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import nn
+import copy
 
 
 class QLearn:
@@ -31,10 +32,12 @@ class QLearn:
             self.maxBatchSize = 10000
             self.learningSteps = 5
             self.learnSize = 6
+            self.moveBatchSteps = 10
         if puzzleSize == 3:
             self.maxBatchSize = 100000  # how many [state,action,reward,newstate] tuples to remember
             self.learningSteps = 30  # after how many actions should a batch be learned
             self.learnSize = 40  # how many of those tuples to randomly choose when learning
+            self.moveBatchSteps = 100
 
         self.age = 0
         self.batch = []
@@ -42,6 +45,8 @@ class QLearn:
 
         self.moveBatch = []
         self.moveBatchSize = 0
+
+        self.winBatch = []
 
         #self.chosenActions = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0}
 
@@ -118,7 +123,7 @@ class QLearn:
         self.batch.append([oneD_state, action, reward, oneD_newstate])
 
         if hasMoved:
-            if self.moveBatchSize > self.learnSize:
+            if self.moveBatchSize > self.moveBatchSteps:
                 self.moveBatch.pop(0)
             else:
                 self.moveBatchSize += 1
@@ -131,6 +136,7 @@ class QLearn:
             #self.alpha = 0.05
             #chosenBatch = self.batch[:-self.learnSize:-1]
             chosenBatch = self.moveBatch[::-1]
+            self.winBatch = copy.deepcopy(chosenBatch)
 
             #self.batch = []
             #self.batchSize = 0
@@ -141,9 +147,11 @@ class QLearn:
 
         elif self.age % self.learningSteps == 0:
             if self.batchSize < self.learnSize:
-                chosenBatch = random.sample(self.batch, self.batchSize)
+                chosenBatch = random.sample(self.batch + self.winBatch, self.batchSize)
+                #chosenBatch = random.sample(self.batch, self.batchSize)
             else:
-                chosenBatch = random.sample(self.batch, self.learnSize)
+                chosenBatch = random.sample(self.batch + self.winBatch, self.learnSize)
+                #chosenBatch = random.sample(self.batch, self.learnSize)
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
                 self.doLearning(b[0], b[1], b[2], b[3])
