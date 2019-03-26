@@ -7,7 +7,7 @@ from copy import deepcopy
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
 
 
-nn_learner = True   # use neural network (True) or dictionary (False)
+nn_learner = False   # use neural network (True) or dictionary (False)
 puzzleSize = 2      # Size 3 means 3x3 puzzle
 
 
@@ -240,6 +240,10 @@ class Puzzle():
                    % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
                       self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
             print(datetime.now())
+            file.write(("%f,%f,%d,%f,%d,%f,%d"
+                    % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
+                       self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
+
             #print(self.ai.q)
             self.movesDone = 0
             self.actionsTaken = 0
@@ -257,6 +261,7 @@ class Puzzle():
             return
 
         if self.lastState is not None:
+            print(self.lastState, self.lastAction, reward, currentState, False, hasMoved)
             self.ai.learn(self.lastState, self.lastAction, reward, currentState, False, hasMoved)
 
 
@@ -303,59 +308,70 @@ epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 puzzle.startTime = datetime.now()
 print("puzzle start: %s" %puzzle.startTime)
 
-# train the player
-#while puzzle.age < learningSteps:
-firstVictoryAge = 0
-while True:
-    # calls update on puzzle (do action and learn) and then updates score and redraws screen
-    puzzle.update()
+# create log file
 
-    # every 100 time steps, decay epsilon (only after first puzzle is solved)
-    if (puzzle.solved > 0) & (puzzle.age % 100 == 0):
-        relevantAge = puzzle.age - firstVictoryAge
-        # this gradually decreases epsilon from epsilonY[0] to epsilonY[1] over the course of epsilonX[0] to [1]
-        # -> at epsilonX[1] epsilon will reach epsilonY[1] and stay there
-        puzzle.ai.epsilon = (epsilonY[0] if relevantAge < epsilonX[0] else
-                             epsilonY[1] if relevantAge > epsilonX[1] else
-                             epsilonM * (relevantAge - epsilonX[0]) + epsilonY[0])
-        # alternatively just multiply by some factor... harder to set right I guess
-        # puzzle.ai.epsilon *= 0.9995
-    elif puzzle.solved < 0:
-        firstVictoryAge = puzzle.age + 1
+fname = ""
+if nn_learner:
+    fname = fname + "nn"
+else:
+    fname = fname + "simple"
+fname = fname + "_" + str(puzzleSize) + "_" + str(puzzle.startTime)
+#with open("C:/Users/Raphael/PycharmProjects/N-Puzzle/log/"+fname+".csv","w+") as f:
+with open("fname.csv","w+") as file:
 
-    # every .. steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next ... steps
-    if puzzle.age % 100000 == 0:
-        print("\nage: " + str(puzzle.age))
-        print("epsilon: " + str(puzzle.ai.epsilon))
-        print(datetime.now())
-        #print("manhattan: " + str(puzzle.getManhattanDistance(puzzle.state, puzzle.solution)))
+    # train the player
+    #while puzzle.age < learningSteps:
+    firstVictoryAge = 0
+    while True:
+        # calls update on puzzle (do action and learn) and then updates score and redraws screen
+        puzzle.update()
 
-        # print puzzle dict (for qlearn.py)
-        #if(len(puzzle.ai.q) > 2200000):
-        #    print("WRITING")
-        #    f = open("output.txt","w")
-        #    #f.write(str(puzzle.ai.q))
-        #    for (key,value) in puzzle.ai.q.items():
-        #        f.write("%s: %d%s" %(str(key), value,"\n"))
-        #    f.close()
-        #    break
+        # every 100 time steps, decay epsilon (only after first puzzle is solved)
+        if (puzzle.solved > 0) & (puzzle.age % 100 == 0):
+            relevantAge = puzzle.age - firstVictoryAge
+            # this gradually decreases epsilon from epsilonY[0] to epsilonY[1] over the course of epsilonX[0] to [1]
+            # -> at epsilonX[1] epsilon will reach epsilonY[1] and stay there
+            puzzle.ai.epsilon = (epsilonY[0] if relevantAge < epsilonX[0] else
+                                 epsilonY[1] if relevantAge > epsilonX[1] else
+                                 epsilonM * (relevantAge - epsilonX[0]) + epsilonY[0])
+            # alternatively just multiply by some factor... harder to set right I guess
+            # puzzle.ai.epsilon *= 0.9995
+        elif puzzle.solved < 0:
+            firstVictoryAge = puzzle.age + 1
+
+        # every .. steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next ... steps
+        if puzzle.age % 100000 == 0:
+            print("\nage: " + str(puzzle.age))
+            print("epsilon: " + str(puzzle.ai.epsilon))
+            print(datetime.now())
+            #print("manhattan: " + str(puzzle.getManhattanDistance(puzzle.state, puzzle.solution)))
+
+            # print puzzle dict (for qlearn.py)
+            #if(len(puzzle.ai.q) > 2200000):
+            #    print("WRITING")
+            #    f = open("output.txt","w")
+            #    #f.write(str(puzzle.ai.q))
+            #    for (key,value) in puzzle.ai.q.items():
+            #        f.write("%s: %d%s" %(str(key), value,"\n"))
+            #    f.close()
+            #    break
 
 
-# ----------------------------------
-# show off
-# ----------------------------------
+    # ----------------------------------
+    # show off
+    # ----------------------------------
 
-endTime = datetime.now()
-totalTime = endTime - startTime
-print("total time: ", divmod(totalTime.days * 86400 + totalTime.seconds, 60))
+    endTime = datetime.now()
+    totalTime = endTime - startTime
+    print("total time: ", divmod(totalTime.days * 86400 + totalTime.seconds, 60))
 
-# after pre training - show off the player ai (while still training, but slower because it has to render now)
-# PAGEUP to render less and thus learn faster
-# PAGEDOWN to reverse the effect
-# SPACE to pause
+    # after pre training - show off the player ai (while still training, but slower because it has to render now)
+    # PAGEUP to render less and thus learn faster
+    # PAGEDOWN to reverse the effect
+    # SPACE to pause
 
-#puzzle.display.activate(size=30)
-#puzzle.display.delay = 1
-#print("enter show off mode")
-while 1 & False:
-    puzzle.update()
+    #puzzle.display.activate(size=30)
+    #puzzle.display.delay = 1
+    #print("enter show off mode")
+    while 1 & False:
+        puzzle.update()
