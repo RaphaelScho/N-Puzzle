@@ -69,7 +69,7 @@ class QLearn:
 
     # all this does is calculate maxqnew and then pass the values to learnQ (which is only called exactly here)
     # could just merge the two functions together (?)
-    def learn(self, state, action, reward, newstate, isSolved):
+    def learn(self, state, action, reward, newstate, isSolved, hasMoved):
         if newstate is not None:
             maxqnew = max([self.getQ(newstate, a) for a in self.actions])
             maxqnew *= self.gamma

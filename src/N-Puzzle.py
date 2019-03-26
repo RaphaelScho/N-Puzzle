@@ -240,7 +240,7 @@ class Puzzle():
                    % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
                       self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
             print(datetime.now())
-            file.write(("%f,%f,%d,%f,%d,%f,%d"
+            file.write(("%f,%f,%d,%f,%d,%f,%d\n"
                     % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
                        self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
 
@@ -261,7 +261,6 @@ class Puzzle():
             return
 
         if self.lastState is not None:
-            print(self.lastState, self.lastAction, reward, currentState, False, hasMoved)
             self.ai.learn(self.lastState, self.lastAction, reward, currentState, False, hasMoved)
 
 
@@ -318,6 +317,8 @@ else:
 fname = fname + "_" + str(puzzleSize) + "_" + str(puzzle.startTime)
 #with open("C:/Users/Raphael/PycharmProjects/N-Puzzle/log/"+fname+".csv","w+") as f:
 with open("fname.csv","w+") as file:
+    #write header
+    file.write("avg moves, avg time, moves, time, actions, epsilon, solved\n")
 
     # train the player
     #while puzzle.age < learningSteps:
