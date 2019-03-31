@@ -8,7 +8,7 @@ from copy import deepcopy
 
 
 nn_learner = False   # use neural network (True) or dictionary (False)
-puzzleSize = 2      # Size 3 means 3x3 puzzle
+puzzleSize = 3      # Size 3 means 3x3 puzzle
 
 
 # ------------------------------------------------------------ #
@@ -314,9 +314,9 @@ if nn_learner:
     fname = fname + "nn"
 else:
     fname = fname + "simple"
-fname = fname + "_" + str(puzzleSize) + "_" + str(puzzle.startTime)
-#with open("C:/Users/Raphael/PycharmProjects/N-Puzzle/log/"+fname+".csv","w+") as f:
-with open("fname.csv","w+") as file:
+fname = "..\\log\\" + str(puzzleSize) + "\\" + fname + "_" + str(puzzle.startTime).replace(":", "-") + ".csv"
+with open(fname,"w+") as file:
+#with open("fname.name as.csv","w+") as file:
     #write header
     file.write("avg moves, avg time, moves, time, actions, epsilon, solved\n")
 

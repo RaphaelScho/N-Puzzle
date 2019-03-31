@@ -16,6 +16,14 @@ class QLearn:
 
         self.actions = range(puzzleSize ** 2)
 
+        if puzzleSize == 2:
+            self.moveBatchSteps = 6
+        if puzzleSize == 3:
+            self.moveBatchSteps = 150
+
+        self.moveBatch = []
+        self.moveBatchSize = 0
+
     # TODO does this cost too much time??
     # turns a state (list of lists) into a tuple of tuples so dict can handle it as a key
     def turnStateIntoTuple(self,state):
@@ -70,10 +78,26 @@ class QLearn:
     # all this does is calculate maxqnew and then pass the values to learnQ (which is only called exactly here)
     # could just merge the two functions together (?)
     def learn(self, state, action, reward, newstate, isSolved, hasMoved):
+
         if newstate is not None:
             maxqnew = max([self.getQ(newstate, a) for a in self.actions])
             maxqnew *= self.gamma
         else:
             maxqnew = None
-        self.learnQ(state, action, reward, maxqnew)
+
+        if hasMoved:
+            if self.moveBatchSize > self.moveBatchSteps:
+                self.moveBatch.pop(0)
+            else:
+                self.moveBatchSize += 1
+
+            self.moveBatch.append([state, action, reward, maxqnew])
+
+        if isSolved:
+            chosenBatch = self.moveBatch[::-1]
+            for i in range(len(chosenBatch)):
+                b = chosenBatch[i]
+                self.learnQ(b[0], b[1], b[2], b[3])
+        else:
+            self.learnQ(state, action, reward, maxqnew)
 
