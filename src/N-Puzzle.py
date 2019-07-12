@@ -7,7 +7,7 @@ from copy import deepcopy
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
 
 
-nn_learner = False   # use neural network (True) or dictionary (False)
+nn_learner = True   # use neural network (True) or dictionary (False)
 puzzleSize = 3      # Size 3 means 3x3 puzzle
 
 
@@ -81,7 +81,7 @@ class Puzzle():
         # c d
         self.randomizer = puzzleRandomizer.Randomizer(self.puzzleSize)
         # create random solvable puzzle start
-        self.state = self.randomizer.makeRandomPuzzle()
+        self.state = self.randomizer.makeRandomPuzzle(self.solved)
         # describes position of the empty cell (value = 0) (x,y)
         self.emptyCellPos = self.initEmptyCellPos()
         # create dict of cells in the puzzle that are neighbours to each other
@@ -92,9 +92,10 @@ class Puzzle():
         self.solution = self.initSolvedPosition()
         # self.display = display.makeDisplay(self)
         # init variables to calc averages
+        self.solveCount = 0
         self.totalMoves = 0
         self.totalTime = 0
-        self.solveCount = 0
+
 
         #self.currentManhattan = self.getManhattanDistance(self.state, self.solution)
         #self.lastManhattan = self.currentManhattan
@@ -253,7 +254,7 @@ class Puzzle():
                 self.ai.learn(self.lastState, self.lastAction, reward, None, True, hasMoved)
             self.lastState = None
 
-            self.state = self.randomizer.makeRandomPuzzle()
+            self.state = self.randomizer.makeRandomPuzzle(self.solved)
             self.emptyCellPos = self.initEmptyCellPos()
 
             self.startTime = datetime.now()
