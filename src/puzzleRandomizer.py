@@ -98,7 +98,7 @@ class Randomizer():
         self.createSolvedPosition()
         # randomise puzzle
         if nSolved < 20:
-            # make nSolver + 1 random moves to give easy puzzles at the beginning
+            # make nSolved + 1 random moves to give easy puzzles at the beginning
             for i in range(nSolved + 1):
                 self.calcEmptyLoc()
                 randX, randY = self.getRandomAdjacent(self.emptyLocX, self.emptyLocY)

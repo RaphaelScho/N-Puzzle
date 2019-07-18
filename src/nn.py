@@ -11,7 +11,8 @@ class nn:
         # self.hiddenLayerSize = self.inputSize ** 0.7  # **1.5  # TODO experimental
         if puzzleSize == 2:
             #self.hiddenLayerSize = 10  # TODO experimental
-            self.hiddenLayerSize = 3  # TODO experimental
+            #self.hiddenLayerSize = 3  # TODO experimental
+            self.hiddenLayerSize = self.inputSize / 2  # TODO experimental
         if puzzleSize == 3:
             #self.hiddenLayerSize = 15  # TODO experimental
             self.hiddenLayerSize = self.inputSize/2  # TODO experimental

@@ -7,7 +7,7 @@ from copy import deepcopy
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
 
 
-nn_learner = True   # use neural network (True) or dictionary (False)
+nn_learner = False   # use neural network (True) or dictionary (False)
 puzzleSize = 3      # Size 3 means 3x3 puzzle
 
 
