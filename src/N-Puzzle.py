@@ -1,3 +1,5 @@
+import math
+
 import puzzleRandomizer
 from datetime import datetime
 from copy import deepcopy
@@ -200,7 +202,7 @@ class Puzzle():
         currentState = deepcopy(self.state)
         # assign a reward of -something by default
         #reward = defaultReward
-        reward = -1 + rewardVal / self.getManhattanForBoard(currentState)
+        reward = rewardVal / math.sqrt(self.getManhattanForBoard(currentState))
 
         # TODO maybe it is better to not selectively punish this
         # if last action was not legal -> useless action -> punish
