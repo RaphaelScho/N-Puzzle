@@ -1,6 +1,7 @@
 import puzzleRandomizer
 from datetime import datetime
 from copy import deepcopy
+import itertools
 
 
 # ------------------------------------------------------------ #
@@ -98,6 +99,14 @@ class Puzzle():
 
         #self.currentManhattan = self.getManhattanDistance(self.state, self.solution)
         #self.lastManhattan = self.currentManhattan
+        self.goalPositions = self.createGoalPositionsPerTile()
+
+        # get manhattan distance for tile num at pos y,x via self.manhattanPerTile[num][(y,x)]
+        self.manhattanPerTile = self.createManhattanPerTile()
+
+        # get manhattan distance for a board state [[1,2,3],[4,5,6],[7,8,0]]
+        # via self.manhattanPerBoard[(1,2,3,4,5,6,7,8,0)]
+        self.manhattanPerBoard = self.createManhattanPerBoard()
 
     # create neighbours dict which has a list of neighbour-positions for each position
     def initNeighbours(self):
@@ -190,7 +199,8 @@ class Puzzle():
         # calculate the state of the surrounding cells (cat, cheese, wall, empty)
         currentState = deepcopy(self.state)
         # assign a reward of -something by default
-        reward = defaultReward
+        #reward = defaultReward
+        reward = -1 + rewardVal / self.getManhattanForBoard(currentState)
 
         # TODO maybe it is better to not selectively punish this
         # if last action was not legal -> useless action -> punish
@@ -277,19 +287,59 @@ class Puzzle():
     def isPuzzleSolved(self):
         return (self.state == self.solution)
 
-    def getManhattanDistance(self, state, solution):
-        dist = 0
+    def createGoalPositionsPerTile(self):
+        goalPositions = {}
         for y in range(0, self.puzzleSize):
             for x in range(0, self.puzzleSize):
-                pos = state[y][x]
+                goalPositions[self.solution[y][x]] = (y,x)
+        return goalPositions
 
-                sol_yx = [(i, sol.index(pos))
-                          for i, sol in enumerate(solution)
-                          if pos in sol]
+    def createManhattanPerTile(self):
+        manhattanPerTile = {}
+        # for each numbered tile calculate each position's manhattan distance
+        for num in range(1,self.puzzleSize**2):
+            manhattanForThisTile = {}
+            for y in range(0, self.puzzleSize):
+                for x in range(0, self.puzzleSize):
+                    dif = abs(y - self.goalPositions[num][0]) + abs(x - self.goalPositions[num][1])
+                    manhattanForThisTile[(y,x)] = dif
+            manhattanPerTile[num] = manhattanForThisTile
+        return manhattanPerTile
 
-                dif = abs(y-sol_yx[0][0]) + abs(x - sol_yx[0][1])
-                dist += dif
+    def createManhattanPerBoard(self):
+        manhattanPerBoard = {}
+        numbers = range(0, self.puzzleSize**2)
+        permutations = list(itertools.permutations(numbers))
+        for perm in permutations:
+            dist = 0
+            # get manhattan distance for tile num at pos y,x via self.manhattanPerTile[num][(y,x)]
+            for i in range(0,len(perm)):
+                (x,y) = self.positionConverter[i]
+                num = perm[i]
+                if num != 0:
+                    dist += self.manhattanPerTile[num][y,x]
+            manhattanPerBoard[perm] = dist
+        return manhattanPerBoard
+
+    def getManhattanForBoard(self, state):
+        # state like [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+        flat_list = [item for sublist in state for item in sublist]
+        dist = self.manhattanPerBoard[tuple(flat_list)]
         return dist
+
+    # def getManhattanDistance(self, state, solution):
+    #     dist = 0
+    #     for y in range(0, self.puzzleSize):
+    #         for x in range(0, self.puzzleSize):
+    #             pos = state[y][x]
+    #
+    #             sol_yx = [(i, sol.index(pos))
+    #                       for i, sol in enumerate(solution)
+    #                       if pos in sol]
+    #
+    #             dif = abs(y-sol_yx[0][0]) + abs(x - sol_yx[0][1])
+    #             dist += dif
+    #     return dist
 
 
 # ----------------------------------
