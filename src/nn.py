@@ -11,11 +11,12 @@ class nn:
         # self.hiddenLayerSize = self.inputSize ** 0.7  # **1.5  # TODO experimental
         if puzzleSize == 2:
             #self.hiddenLayerSize = 10  # TODO experimental
-            self.hiddenLayerSize = 3  # TODO experimental
+            #self.hiddenLayerSize = 3  # TODO experimental
+            self.hiddenLayerSize = self.inputSize / 2  # TODO experimental
         if puzzleSize == 3:
             #self.hiddenLayerSize = 15  # TODO experimental
-            self.hiddenLayerSize = 4  # TODO experimental
-            self.hiddenLayerSize2 = 3  # TODO experimental
+            self.hiddenLayerSize = self.inputSize/2  # TODO experimental
+            self.hiddenLayerSize2 = self.inputSize/4  # TODO experimental
 
         tf.reset_default_graph()
 
@@ -29,8 +30,8 @@ class nn:
         self.inputs = tf.placeholder(shape=[1, self.inputSize], dtype=tf.float32)
         fc1 = tf.layers.dense(self.inputs, self.hiddenLayerSize, activation=tf.nn.relu)
         if puzzleSize == 3:
-            #fc2 = tf.layers.dense(fc1, self.hiddenLayerSize2, activation=tf.nn.relu)
-            self.Qout = tf.layers.dense(fc1, 1)
+            fc2 = tf.layers.dense(fc1, self.hiddenLayerSize2, activation=tf.nn.relu)
+            self.Qout = tf.layers.dense(fc2, 1)
         else:
             self.Qout = tf.layers.dense(fc1, 1)
         self.predict = tf.argmax(self.Qout, 1)

@@ -26,28 +26,23 @@ class QLearn:
             net = nn.nn(puzzleSize = self.puzzleSize, alpha = self.alpha)
             self.networks[action] = net
 
-
-        # TODO those values might also need to change based on puzzle size
         if puzzleSize == 2:
-            self.maxBatchSize = 10000
-            self.learningSteps = 5
-            self.learnSize = 6
-            self.moveBatchSteps = 6
+            self.batchMaxSize = 50
+            self.moveBatchMaxSize = 10
+            self.learningSteps = 20
+            self.learnSize = 10
         if puzzleSize == 3:
-            self.maxBatchSize = 100000  # how many [state,action,reward,newstate] tuples to remember
-            self.learningSteps = 30  # after how many actions should a batch be learned
-            self.learnSize = 40  # how many of those tuples to randomly choose when learning
-            self.moveBatchSteps = 150
+            self.batchMaxSize = 450  # how many [state,action,reward,newstate] tuples to remember
+            self.moveBatchMaxSize = 50 # how many tuples to remember where a change in the boardstate happened
+            self.learningSteps = 200  # after how many actions should a batch be learned
+            self.learnSize = 20  # how many of those tuples to randomly choose when learning
 
         self.age = 0
         self.batch = []
         self.batchSize = 0
-
         self.moveBatch = []
         self.moveBatchSize = 0
-
         self.winBatch = []
-
         #self.chosenActions = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0}
 
     # transform state representation using numbers from 0 to N^2-1 to representation using a vector on length N^2
@@ -116,24 +111,20 @@ class QLearn:
         else:
             oneD_newstate = None
 
-        if self.batchSize > self.maxBatchSize:
+        if self.batchSize >= self.batchMaxSize:
             self.batch.pop(0)
         else:
             self.batchSize += 1
         self.batch.append([oneD_state, action, reward, oneD_newstate])
 
         if hasMoved:
-            if self.moveBatchSize > self.moveBatchSteps:
+            if self.moveBatchSize >= self.moveBatchMaxSize:
                 self.moveBatch.pop(0)
             else:
                 self.moveBatchSize += 1
             self.moveBatch.append([oneD_state, action, reward, oneD_newstate])
 
-        # TODO it uses less space to store states in original form and only transform when chosen
-
         if isSolved:
-            origAlpha = self.alpha
-            #self.alpha = 0.05
             #chosenBatch = self.batch[:-self.learnSize:-1]
             chosenBatch = self.moveBatch[::-1]
             self.winBatch = copy.deepcopy(chosenBatch)
@@ -143,14 +134,16 @@ class QLearn:
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
                 self.doLearning(b[0], b[1], b[2], b[3])
-            self.alpha = origAlpha
+
+            self.moveBatch = []
+            self.moveBatchSize = 0
 
         elif self.age % self.learningSteps == 0:
-            if self.batchSize < self.learnSize:
-                chosenBatch = random.sample((self.batch + self.winBatch), self.batchSize)
+            #if self.batchSize < self.learnSize:
+            chosenBatch = random.sample((self.batch + self.winBatch), min(self.batchSize, self.learnSize))
                 #chosenBatch = random.sample(self.batch, self.batchSize)
-            else:
-                chosenBatch = random.sample((self.batch + self.winBatch), self.learnSize)
+            #else:
+             #   chosenBatch = random.sample((self.batch + self.winBatch), self.learnSize)
                 #chosenBatch = random.sample(self.batch, self.learnSize)
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
