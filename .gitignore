@@ -1,5 +1,7 @@
 # gitignore for PyCharm by https://gist.github.com/fjcaetano/4069311
 
+log
+
 # Compiled source #
 ###################
 *.com
