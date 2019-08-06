@@ -49,12 +49,16 @@ class QLearn:
 
         # oldreward is the reward for (s,a) as it was before
         oldreward = self.q.get((stateTuple, action), None)
-        if oldreward is None or maxq is None:
-            # if (s,a) has not been done before, just put the reward into the dict
-            self.q[(stateTuple, action)] = reward
-        else:
+
+        if (oldreward is not None) & (maxq is not None):
             # if there was already a value, update it according to the Q-learning algorithm
             self.q[(stateTuple, action)] = oldreward + self.alpha * (reward + maxq - oldreward)
+        elif maxq is not None:
+            # if tuple seen for the first time, but some neighbour state is known -> use reward and best next state
+            self.q[(stateTuple, action)] = reward + maxq
+        else:
+            # if tuple seen for the first time and no other information available -> use just current reward
+            self.q[(stateTuple, action)] = reward
 
     # returns the best action based on knowledge in q dictionary
     # chance to return a random action = self.epsilon
@@ -80,38 +84,28 @@ class QLearn:
 
         self.stepsSinceLastLearned += 1
 
-        if newstate is not None:
-            maxqnew = max([self.getQ(newstate, a) for a in self.actions])
-            maxqnew *= self.gamma
-        else:
-            maxqnew = None
-
-        #if hasMoved:
         if self.batchSize >= self.batchMaxSize:
             self.batch.pop(0)
         else:
             self.batchSize += 1
-        self.batch.append([state, action, reward, maxqnew])
+        self.batch.append([state, action, reward, newstate])
 
         if isSolved:
-            #self.stepsSinceLastLearned = 0
             chosenBatch = self.batch[::-1]
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
-                self.learnQ(b[0], b[1], b[2], b[3])
+                if b[3] is not None:
+                    maxqnew = max([self.getQ(b[3], a) for a in self.actions])
+                    maxqnew *= self.gamma
+                else:
+                    maxqnew = None
+                self.learnQ(b[0], b[1], b[2], maxqnew)
             self.batch=[]
             self.batchSize=0
         else:
+            if newstate is not None:
+                maxqnew = max([self.getQ(newstate, a) for a in self.actions])
+                maxqnew *= self.gamma
+            else:
+                maxqnew = None
             self.learnQ(state, action, reward, maxqnew)
-            #if self.stepsSinceLastLearned >= self.batchMaxSize:
-            #    self.stepsSinceLastLearned = 0
-                #print(len(self.moveBatch))
-                #print(self.moveBatchSize)
-                #print(self.moveBatch)
-                #print("\n")
-            #    randomSubList = random.sample(self.batch, round(self.batchSize/5))
-            #    for i in range(len(randomSubList)):
-            #        b = randomSubList[i]
-            #        self.learnQ(b[0], b[1], b[2], b[3])
-
-            #self.learnQ(state, action, reward, maxqnew)

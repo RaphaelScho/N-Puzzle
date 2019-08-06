@@ -24,24 +24,24 @@ else:
     import qlearn as learner
 
 if puzzleSize == 2:
-    epsilonSteps = 10000   # over how many steps epsilon is reduced to its final value
+    epsilonSteps = 1000   # over how many steps epsilon is reduced to its final value
     epsilonStartVal = 0.05   # chance to take a random action
     epsilonEndVal = 0.01
-    alphaVal = 0.01          # learning rate
+    alphaVal = 1          # learning rate
     gammaVal = 0.99          # discount factor for future rewards
     rewardVal = 1           # reward for solving the puzzle
-    punishVal = -0.4        # punishment for doing nothing
+    punishVal = -1      # punishment for doing nothing
     #defaultReward = -0.1    # for every step, to encourage faster solving
 
-elif puzzleSize == 3:
-    epsilonSteps = 6000000
-    epsilonStartVal = 0.05
+elif puzzleSize == 3: # hardest instance takes 31 moves to solve
+    epsilonSteps = 4500000
+    epsilonStartVal = 0.20
     epsilonEndVal = 0.01
-    alphaVal = 0.001
+    alphaVal = 1
     gammaVal = 0.999
-    rewardVal = 5
-    punishVal = -0.4
-    #defaultReward = -0.1
+    rewardVal = 1
+    punishVal = -1
+    #defaultReward = -0.005
 
 # TODO no set yet
 elif puzzleSize == 4:
@@ -210,7 +210,7 @@ class Puzzle():
             # best case: dist 1 => reward
             # worst case: dist -> inf => reward ->
             # no move taken -> reward even lower (see below)
-            reward = ((1 / math.sqrt(self.getManhattanForBoard(currentState)) - 1) / 10 - 0.001)/5
+            reward = ((1 / math.sqrt(self.getManhattanForBoard(currentState)) - 1) - 0.001) / 20000
 
             # TODO maybe it is better to not selectively punish this
             # if last action was not legal -> useless action -> punish
