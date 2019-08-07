@@ -10,49 +10,84 @@ import itertools
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
 
 
-nn_learner = False   # use neural network (True) or dictionary (False)
-puzzleSize = 3      # Size 3 means 3x3 puzzle
+nn_learner = True   # use neural network (True) or dictionary (False)
+puzzleSize = 2      # Size 3 means 3x3 puzzle
 
 
 # ------------------------------------------------------------ #
 # ------------------------------------------------------------ #
+
+print("initializing puzzle..")
 
 # TODO maybe qlearn and qlearn_nn need different values here
+# TODO YES DEFINITELY
 if nn_learner:
     import qlearn_nn as learner
 else:
     import qlearn as learner
 
-if puzzleSize == 2:
-    epsilonSteps = 1000   # over how many steps epsilon is reduced to its final value
-    epsilonStartVal = 0.05   # chance to take a random action
-    epsilonEndVal = 0.01
-    alphaVal = 1          # learning rate
-    gammaVal = 0.99          # discount factor for future rewards
-    rewardVal = 1           # reward for solving the puzzle
-    punishVal = -1      # punishment for doing nothing
-    #defaultReward = -0.1    # for every step, to encourage faster solving
+if not nn_learner:
+    if puzzleSize == 2:
+        epsilonSteps = 1000   # over how many steps epsilon is reduced to its final value
+        epsilonStartVal = 0.05   # chance to take a random action
+        epsilonEndVal = 0.01
+        alphaVal = 1          # learning rate
+        gammaVal = 0.99          # discount factor for future rewards
+        rewardVal = 1           # reward for solving the puzzle
+        punishVal = -1      # punishment for doing nothing
+        #defaultReward = -0.1    # for every step, to encourage faster solving
 
-elif puzzleSize == 3: # hardest instance takes 31 moves to solve
-    epsilonSteps = 4500000
-    epsilonStartVal = 0.20
-    epsilonEndVal = 0.01
-    alphaVal = 1
-    gammaVal = 0.999
-    rewardVal = 1
-    punishVal = -1
-    #defaultReward = -0.005
+    elif puzzleSize == 3: # hardest instance takes 31 moves to solve
+        epsilonSteps = 4500000
+        epsilonStartVal = 0.20
+        epsilonEndVal = 0.01
+        alphaVal = 1
+        gammaVal = 0.999
+        rewardVal = 1
+        punishVal = -1
+        #defaultReward = -0.005
 
-# TODO no set yet
-elif puzzleSize == 4:
-    epsilonSteps = 500000000
-    epsilonStartVal = 0.2
-    epsilonEndVal = 0.01
-    alphaVal = 0.01
-    gammaVal = 0.999
-    rewardVal = 5000
-    punishVal = -0.2
-    #defaultReward = -0.1
+    # TODO no set yet
+    elif puzzleSize == 4:
+        epsilonSteps = 500000000
+        epsilonStartVal = 0.2
+        epsilonEndVal = 0.01
+        alphaVal = 0.01
+        gammaVal = 0.999
+        rewardVal = 5000
+        punishVal = -0.2
+        #defaultReward = -0.1
+else:
+    if puzzleSize == 2:
+        epsilonSteps = 50000  # over how many steps epsilon is reduced to its final value
+        epsilonStartVal = 0.15  # chance to take a random action
+        epsilonEndVal = 0.01
+        alphaVal = 0.01  # learning rate
+        gammaVal = 0.99  # discount factor for future rewards
+        rewardVal = 1  # reward for solving the puzzle
+        punishVal = -1  # punishment for doing nothing
+        # defaultReward = -0.1    # for every step, to encourage faster solving
+
+    elif puzzleSize == 3:  # hardest instance takes 31 moves to solve
+        epsilonSteps = 4500000
+        epsilonStartVal = 0.20
+        epsilonEndVal = 0.01
+        alphaVal = 1
+        gammaVal = 0.999
+        rewardVal = 1
+        punishVal = -1
+        # defaultReward = -0.005
+
+    # TODO no set yet
+    elif puzzleSize == 4:
+        epsilonSteps = 500000000
+        epsilonStartVal = 0.2
+        epsilonEndVal = 0.01
+        alphaVal = 0.01
+        gammaVal = 0.999
+        rewardVal = 5000
+        punishVal = -0.2
+        # defaultReward = -0.1
 
 
 # ------------------------------------------------------------ #
@@ -376,6 +411,7 @@ else:
     fname = fname + "simple"
 fname = "..\\log\\" + str(puzzleSize) + "\\" + fname + "_" + str(puzzle.startTime).replace(":", "-") + ".csv"
 with open(fname,"w+") as file:
+    print("Starting training..")
 #with open("fname.name as.csv","w+") as file:
     #write header
     file.write("avg moves, avg time, moves, time, actions, epsilon, solved\n")

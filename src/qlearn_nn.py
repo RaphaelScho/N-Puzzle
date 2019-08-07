@@ -24,7 +24,7 @@ class QLearn:
         self.networks = {}
         for action in self.actions:
             net = nn.nn(puzzleSize = self.puzzleSize, alpha = self.alpha)
-            self.networks[action] = net
+            self.networks[action] = copy.copy(net)
 
         if puzzleSize == 2:
             self.batchMaxSize = 50
@@ -102,10 +102,53 @@ class QLearn:
         # add to that the reward that was received for entering that state and you have the states Q-value
 
     # use Q-learning formula to update nn when an action is taken
+    # def learn_(self, state, action, reward, newstate, isSolved, hasMoved):
+    #     oneD_state = self.transformState(state)
+    #     if newstate is not None:
+    #         oneD_newstate = self.transformState(newstate)
+    #     else:
+    #         oneD_newstate = None
+    #
+    #     if self.batchSize >= self.batchMaxSize:
+    #         self.batch.pop(0)
+    #     else:
+    #         self.batchSize += 1
+    #     self.batch.append([oneD_state, action, reward, oneD_newstate])
+    #
+    #     if hasMoved:
+    #         if self.moveBatchSize >= self.moveBatchMaxSize:
+    #             self.moveBatch.pop(0)
+    #         else:
+    #             self.moveBatchSize += 1
+    #         self.moveBatch.append([oneD_state, action, reward, oneD_newstate])
+    #
+    #     if isSolved:
+    #         #chosenBatch = self.batch[:-self.learnSize:-1]
+    #         chosenBatch = self.moveBatch[::-1]
+    #         self.winBatch = copy.deepcopy(chosenBatch)
+    #
+    #         #self.batch = []
+    #         #self.batchSize = 0
+    #         for i in range(len(chosenBatch)):
+    #             b = chosenBatch[i]
+    #             self.doLearning(b[0], b[1], b[2], b[3])
+    #
+    #         self.moveBatch = []
+    #         self.moveBatchSize = 0
+    #
+    #     elif self.age % self.learningSteps == 0:
+    #         #if self.batchSize < self.learnSize:
+    #         chosenBatch = random.sample((self.batch + self.winBatch), min(self.batchSize, self.learnSize))
+    #             #chosenBatch = random.sample(self.batch, self.batchSize)
+    #         #else:
+    #          #   chosenBatch = random.sample((self.batch + self.winBatch), self.learnSize)
+    #             #chosenBatch = random.sample(self.batch, self.learnSize)
+    #         for i in range(len(chosenBatch)):
+    #             b = chosenBatch[i]
+    #             self.doLearning(b[0], b[1], b[2], b[3])
+
     def learn(self, state, action, reward, newstate, isSolved, hasMoved):
-        #oneD_state = np.asarray(state).flatten()
         oneD_state = self.transformState(state)
-        #oneD_newstate = np.asarray(newstate).flatten()
         if newstate is not None:
             oneD_newstate = self.transformState(newstate)
         else:
@@ -117,37 +160,29 @@ class QLearn:
             self.batchSize += 1
         self.batch.append([oneD_state, action, reward, oneD_newstate])
 
-        if hasMoved:
-            if self.moveBatchSize >= self.moveBatchMaxSize:
-                self.moveBatch.pop(0)
-            else:
-                self.moveBatchSize += 1
-            self.moveBatch.append([oneD_state, action, reward, oneD_newstate])
-
         if isSolved:
-            #chosenBatch = self.batch[:-self.learnSize:-1]
-            chosenBatch = self.moveBatch[::-1]
-            self.winBatch = copy.deepcopy(chosenBatch)
-
-            #self.batch = []
-            #self.batchSize = 0
+            chosenBatch = self.batch[::-1]
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
+                # if b[3] is not None:
+                #     maxqnew = max([self.getQ(b[3], a) for a in self.actions])
+                #     maxqnew *= self.gamma
+                # else:
+                #     maxqnew = None
                 self.doLearning(b[0], b[1], b[2], b[3])
-
-            self.moveBatch = []
-            self.moveBatchSize = 0
-
-        elif self.age % self.learningSteps == 0:
-            #if self.batchSize < self.learnSize:
-            chosenBatch = random.sample((self.batch + self.winBatch), min(self.batchSize, self.learnSize))
-                #chosenBatch = random.sample(self.batch, self.batchSize)
-            #else:
-             #   chosenBatch = random.sample((self.batch + self.winBatch), self.learnSize)
-                #chosenBatch = random.sample(self.batch, self.learnSize)
+            self.batch=[]
+            self.batchSize=0
+        elif self.age % self.batchMaxSize == 0:
+            chosenBatch = self.batch[::-1]
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
+                # if b[3] is not None:
+                #     maxqnew = max([self.getQ(b[3], a) for a in self.actions])
+                #     maxqnew *= self.gamma
+                # else:
+                #     maxqnew = None
                 self.doLearning(b[0], b[1], b[2], b[3])
+            #self.doLearning(oneD_state, action, reward, oneD_newstate)
 
     # returns the best action based on knowledge in nn
     # chance to return a random action = self.epsilon
