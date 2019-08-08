@@ -10,8 +10,8 @@ import itertools
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
 
 
-nn_learner = True   # use neural network (True) or dictionary (False)
-puzzleSize = 2      # Size 3 means 3x3 puzzle
+nn_learner = False   # use neural network (True) or dictionary (False)
+puzzleSize = 3      # Size 3 means 3x3 puzzle
 
 
 # ------------------------------------------------------------ #
@@ -19,8 +19,6 @@ puzzleSize = 2      # Size 3 means 3x3 puzzle
 
 print("initializing puzzle..")
 
-# TODO maybe qlearn and qlearn_nn need different values here
-# TODO YES DEFINITELY
 if nn_learner:
     import qlearn_nn as learner
 else:
@@ -35,7 +33,6 @@ if not nn_learner:
         gammaVal = 0.99          # discount factor for future rewards
         rewardVal = 1           # reward for solving the puzzle
         punishVal = -1      # punishment for doing nothing
-        #defaultReward = -0.1    # for every step, to encourage faster solving
 
     elif puzzleSize == 3: # hardest instance takes 31 moves to solve
         epsilonSteps = 4500000
@@ -45,49 +42,24 @@ if not nn_learner:
         gammaVal = 0.999
         rewardVal = 1
         punishVal = -1
-        #defaultReward = -0.005
-
-    # TODO no set yet
-    elif puzzleSize == 4:
-        epsilonSteps = 500000000
-        epsilonStartVal = 0.2
-        epsilonEndVal = 0.01
-        alphaVal = 0.01
-        gammaVal = 0.999
-        rewardVal = 5000
-        punishVal = -0.2
-        #defaultReward = -0.1
 else:
-    if puzzleSize == 2:
+    if puzzleSize == 2: # hardest instance takes 8 (?) moves
         epsilonSteps = 50000  # over how many steps epsilon is reduced to its final value
-        epsilonStartVal = 0.15  # chance to take a random action
+        epsilonStartVal = 0.20  # chance to take a random action
         epsilonEndVal = 0.01
         alphaVal = 0.01  # learning rate
         gammaVal = 0.99  # discount factor for future rewards
         rewardVal = 1  # reward for solving the puzzle
         punishVal = -1  # punishment for doing nothing
-        # defaultReward = -0.1    # for every step, to encourage faster solving
 
     elif puzzleSize == 3:  # hardest instance takes 31 moves to solve
-        epsilonSteps = 4500000
-        epsilonStartVal = 0.20
+        epsilonSteps = 10500000
+        epsilonStartVal = 0.25
         epsilonEndVal = 0.01
-        alphaVal = 1
+        alphaVal = 0.0001
         gammaVal = 0.999
-        rewardVal = 1
+        rewardVal = 100
         punishVal = -1
-        # defaultReward = -0.005
-
-    # TODO no set yet
-    elif puzzleSize == 4:
-        epsilonSteps = 500000000
-        epsilonStartVal = 0.2
-        epsilonEndVal = 0.01
-        alphaVal = 0.01
-        gammaVal = 0.999
-        rewardVal = 5000
-        punishVal = -0.2
-        # defaultReward = -0.1
 
 
 # ------------------------------------------------------------ #
@@ -227,27 +199,23 @@ class Puzzle():
         else:
             return False
 
-    # calc reward based on current state (-1 default, +100 puzzle solved) and
-    # if puzzle solved -> create random new puzzle
+    # calc reward based on current state and if puzzle solved -> create random new puzzle
     # if this is not the first state after new puzzle created -> Q-learn(s,a,r,s')
     # choose an action and perform that action
     def update(self):
         reward = None
         hasMoved = True
-        # self.display.update()
-        # calculate the state of the surrounding cells (cat, cheese, wall, empty)
         currentState = deepcopy(self.state)
 
         if not self.isPuzzleSolved():
-            # assign a reward of -something by default
             # reward based on manhattan distance
-            # TODO
-            # best case: dist 1 => reward
-            # worst case: dist -> inf => reward ->
-            # no move taken -> reward even lower (see below)
-            reward = ((1 / math.sqrt(self.getManhattanForBoard(currentState)) - 1) - 0.001) / 20000
+            mh = self.getManhattanForBoard(currentState)
+            #print("Manhattan: " + str(mh))
+            if self.puzzleSize == 2:
+                reward = ((1 / math.sqrt(mh) - 1) - 0.001) / 20000
+            elif self.puzzleSize == 3:
+                reward = ((1 / math.sqrt(mh) - 1) - 0.001) / 20
 
-            # TODO maybe it is better to not selectively punish this
             # if last action was not legal -> useless action -> punish
             if (self.lastState == currentState):
                 reward = punishVal
@@ -271,26 +239,8 @@ class Puzzle():
                 self.solveCount = 1
                 print("\nresetting calculation of average")
 
-            # calculate rolling averages
-            #if len(self.timeList)<10:
-            #self.timeList.append(timeDif)
             self.totalTime += timeDif
-            #else:
-            #    self.timeList[self.rollPos] = timeDif
-            #if len(self.movesList) < self.rollLength:
-            #self.movesList.append(self.movesDone)
             self.totalMoves += self.movesDone
-            #else:
-            #    self.movesList[self.rollPos] = self.movesDone
-
-            #if self.rollPos >= (self.rollLength - 1):
-            #    self.rollPos = 0
-            #else:
-            #self.rollPos += 1
-            # print rolling averages
-            #print(("avg moves: %d \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \t\tepsilon: %f \tsolved: %f"
-            #      %(1.0*sum(self.movesList)/len(self.movesList), 1.0*sum(self.timeList)/len(self.timeList),
-            #        self.movesDone, timeDif, self.ai.epsilon, self.solved)).expandtabs(18))
             print(("\navg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \tactions: %d \t\tepsilon: %f \tsolved: %d"
                    % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
                       self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
@@ -299,7 +249,6 @@ class Puzzle():
                     % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
                        self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
 
-            #print(self.ai.q)
             self.movesDone = 0
             self.actionsTaken = 0
 
@@ -320,7 +269,7 @@ class Puzzle():
 
 
         # get updated state (puzzle might have been recreated after being solved), choose a new action and execute it
-        currentState = deepcopy(self.state)
+        currentState = self.state
         action = self.ai.chooseAction(currentState)
 
         self.lastState = deepcopy(currentState)
@@ -371,20 +320,6 @@ class Puzzle():
         flat_list = [item for sublist in state for item in sublist]
         dist = self.manhattanPerBoard[tuple(flat_list)]
         return dist
-
-    # def getManhattanDistance(self, state, solution):
-    #     dist = 0
-    #     for y in range(0, self.puzzleSize):
-    #         for x in range(0, self.puzzleSize):
-    #             pos = state[y][x]
-    #
-    #             sol_yx = [(i, sol.index(pos))
-    #                       for i, sol in enumerate(solution)
-    #                       if pos in sol]
-    #
-    #             dif = abs(y-sol_yx[0][0]) + abs(x - sol_yx[0][1])
-    #             dist += dif
-    #     return dist
 
 
 # ----------------------------------

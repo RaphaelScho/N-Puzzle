@@ -11,40 +11,19 @@ class nn:
         self.hiddenLayerSize = None
         self.hiddenLayerSize2 = None
 
-        # self.hiddenLayerSize = self.inputSize ** 0.7  # **1.5  # TODO experimental
         if puzzleSize == 2:
-            self.hiddenLayerSize = round(self.inputSize / 4)  # TODO experimental
-            #self.hiddenLayerSize2 = self.inputSize / 2  # TODO experimental
+            self.hiddenLayerSize = round(self.inputSize / 2)
         if puzzleSize == 3:
-            self.hiddenLayerSize = self.inputSize / 2  # TODO experimental
-            self.hiddenLayerSize2 = self.inputSize / 4  # TODO experimental
+            self.hiddenLayerSize = round(self.inputSize / 1)
+            self.hiddenLayerSize2 = round(self.inputSize / 2)
 
         tf.reset_default_graph()
 
-        # # layers
-        # self.inputs = tf.placeholder(shape=[1, self.inputSize], dtype=tf.float32)
-        # fc1 = tf.layers.dense(self.inputs, self.hiddenLayerSize, activation=tf.nn.relu)
-        # if self.hiddenLayerSize2 is not None:
-        #     fc2 = tf.layers.dense(fc1, self.hiddenLayerSize2, activation=tf.nn.relu)
-        #     self.Qout = tf.layers.dense(fc2, 1)
-        # else:
-        #     self.Qout = tf.layers.dense(fc1, 1)
-        # self.predict = tf.argmax(self.Qout, 1)
-        #
-        # # Below we obtain the loss by taking the sum of squares difference between the target and prediction Q values.
-        # self.nextQ = tf.placeholder(shape=[1, 1], dtype=tf.float32)
-        # self.loss = tf.reduce_sum(tf.square(tf.clip_by_value(self.nextQ - self.Qout, -2, 2)))
-        # self.trainer = tf.train.GradientDescentOptimizer(learning_rate=self.alpha)
-        # #self.trainer = tf.train.AdamOptimizer(learning_rate=self.alpha)
-        # self.updateModel = self.trainer.minimize(self.loss)
-
         # layers
-
         self.inputs = tf.placeholder(shape=[1, self.inputSize], dtype=tf.float32)
         fc1 = self.fc_layer(self.inputs, self.hiddenLayerSize, "L1", use_relu=True)
         if self.hiddenLayerSize2 is not None:
             fc2 = self.fc_layer(fc1, self.hiddenLayerSize2, "L2", use_relu=True)
-                #tf.layers.dense(fc1, self.hiddenLayerSize2, activation=tf.nn.relu)
             self.Qout = tf.layers.dense(fc2, 1)
         else:
             self.Qout = tf.layers.dense(fc1, 1)
@@ -59,13 +38,11 @@ class nn:
 
         self.sess = tf.Session()
         init = tf.global_variables_initializer()
-        #init_l = tf.local_variables_initializer()
         self.sess.run(init)
-        #self.sess.run(init_l)
 
-        #self._var_init = tf.global_variables_initializer()
-        #self.sess.run(self._var_init)
 
+    # helper functions below from https://easy-tensorflow.com/tf-tutorials/neural-networks/two-layer-neural-network
+    # (from 06.08.2019)
 
     # weight and bais wrappers
     def weight_variable(self, name, shape):
