@@ -10,7 +10,7 @@ import itertools
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
 
 
-nn_learner = False   # use neural network (True) or dictionary (False)
+algorithm = 2       # use  dictionary (0), neural network (1) or lgbm regressor (2)
 puzzleSize = 3      # Size 3 means 3x3 puzzle
 
 
@@ -19,16 +19,18 @@ puzzleSize = 3      # Size 3 means 3x3 puzzle
 
 print("initializing puzzle..")
 
-if nn_learner:
-    import qlearn_nn as learner
-else:
+if algorithm == 0:
     import qlearn as learner
+elif algorithm == 1:
+    import qlearn_nn as learner
+elif algorithm == 2:
+    import qlearn_lgbm as learner
 
-if not nn_learner:
+if algorithm == 0:
     if puzzleSize == 2:
         epsilonSteps = 1000   # over how many steps epsilon is reduced to its final value
         epsilonStartVal = 0.05   # chance to take a random action
-        epsilonEndVal = 0.01
+        epsilonEndVal = 0.001
         alphaVal = 1          # learning rate
         gammaVal = 0.99          # discount factor for future rewards
         rewardVal = 1           # reward for solving the puzzle
@@ -42,7 +44,7 @@ if not nn_learner:
         gammaVal = 0.999
         rewardVal = 1
         punishVal = -1
-else:
+elif algorithm == 1:
     if puzzleSize == 2: # hardest instance takes 8 (?) moves
         epsilonSteps = 50000  # over how many steps epsilon is reduced to its final value
         epsilonStartVal = 0.20  # chance to take a random action
@@ -58,6 +60,24 @@ else:
         epsilonEndVal = 0.01
         alphaVal = 0.0001
         gammaVal = 0.999
+        rewardVal = 100
+        punishVal = -1
+elif algorithm == 2: # TODO untested values
+    if puzzleSize == 2: # hardest instance takes 8 (?) moves
+        epsilonSteps = 5000  # over how many steps epsilon is reduced to its final value
+        epsilonStartVal = 1  # chance to take a random action
+        epsilonEndVal = 0.05
+        alphaVal = 0.01  # learning rate
+        gammaVal = 0.99  # discount factor for future rewards
+        rewardVal = 1  # reward for solving the puzzle
+        punishVal = -1  # punishment for doing nothing
+
+    elif puzzleSize == 3:  # hardest instance takes 31 moves to solve
+        #epsilonSteps = 100000
+        epsilonStartVal = None #1
+        epsilonEndVal = None #0.05
+        alphaVal = 0.01
+        gammaVal = 0.99
         rewardVal = 100
         punishVal = -1
 
@@ -223,8 +243,19 @@ class Puzzle():
 
         # observe the reward and update the Q-value
         else:
+            reward = rewardVal
+            if self.lastState is not None:
+                if algorithm == 2:
+                    self.ai.learn(self.lastState, self.lastAction, reward, currentState, True, hasMoved)
+                else: #TODO why None instead of solved state?
+                    self.ai.learn(self.lastState, self.lastAction, reward, None, True, hasMoved)
+            self.lastState = None
+
             self.solved += 1
             self.solveCount += 1
+
+            self.state = self.randomizer.makeRandomPuzzle(self.solved)
+            self.emptyCellPos = self.initEmptyCellPos()
 
             endTime = datetime.now()
             totalTime = endTime - self.startTime
@@ -241,24 +272,32 @@ class Puzzle():
 
             self.totalTime += timeDif
             self.totalMoves += self.movesDone
-            print(("\navg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \tactions: %d \t\tepsilon: %f \tsolved: %d"
-                   % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
-                      self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
-            print(datetime.now())
-            file.write(("%f,%f,%d,%f,%d,%f,%d\n"
-                    % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
-                       self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
+
+            if algorithm != 2:
+                print((
+                                  "\navg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \tactions: %d \t\tepsilon: %f \tsolved: %d"
+                                  % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
+                                     self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(
+                    18))
+                print(datetime.now())
+                file.write(("%f,%f,%d,%f,%d,%f,%d\n"
+                            % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
+                               self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
+            else: #TODO get epsilon?
+                print((
+                        "\navg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \tactions: %d \tsolved: %d"
+                        % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
+                           self.movesDone, timeDif, self.actionsTaken, self.solved)).expandtabs(
+                    18))
+                print(datetime.now())
+                file.write(("%f,%f,%d,%f,%d,%d\n"
+                            % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
+                               self.movesDone, timeDif, self.actionsTaken, self.solved)).expandtabs(
+                    18))
 
             self.movesDone = 0
             self.actionsTaken = 0
 
-            reward = rewardVal
-            if self.lastState is not None:
-                self.ai.learn(self.lastState, self.lastAction, reward, None, True, hasMoved)
-            self.lastState = None
-
-            self.state = self.randomizer.makeRandomPuzzle(self.solved)
-            self.emptyCellPos = self.initEmptyCellPos()
 
             self.startTime = datetime.now()
 
@@ -328,11 +367,12 @@ class Puzzle():
 
 puzzle = Puzzle(puzzleSize=puzzleSize)
 
-# learning factor
-epsilonX = (0, epsilonSteps)  # for how many time steps epsilon will be > 0, TODO value experimental
-epsilonY = (puzzle.ai.epsilon, epsilonEndVal) # start and end epsilon value
-# decay rate for epsilon so it hits the minimum value after epsilonX[1] time steps
-epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
+if algorithm != 2:
+    # learning factor
+    epsilonX = (0, epsilonSteps)  # for how many time steps epsilon will be > 0, TODO value experimental
+    epsilonY = (puzzle.ai.epsilon, epsilonEndVal) # start and end epsilon value
+    # decay rate for epsilon so it hits the minimum value after epsilonX[1] time steps
+    epsilonM = (epsilonY[1] - epsilonY[0]) / (epsilonX[1] - epsilonX[0])
 
 puzzle.startTime = datetime.now()
 print("puzzle start: %s" %puzzle.startTime)
@@ -340,10 +380,12 @@ print("puzzle start: %s" %puzzle.startTime)
 # create log file
 
 fname = ""
-if nn_learner:
+if algorithm == 1:
     fname = fname + "nn"
-else:
+elif algorithm == 0:
     fname = fname + "simple"
+elif algorithm == 2:
+    fname = fname + "lgbm"
 fname = "..\\log\\" + str(puzzleSize) + "\\" + fname + "_" + str(puzzle.startTime).replace(":", "-") + ".csv"
 with open(fname,"w+") as file:
     print("Starting training..")
@@ -358,23 +400,25 @@ with open(fname,"w+") as file:
         # calls update on puzzle (do action and learn) and then updates score and redraws screen
         puzzle.update()
 
-        # every 100 time steps, decay epsilon (only after first puzzle is solved)
-        if (puzzle.solved > 0) & (puzzle.age % 100 == 0):
-            relevantAge = puzzle.age - firstVictoryAge
-            # this gradually decreases epsilon from epsilonY[0] to epsilonY[1] over the course of epsilonX[0] to [1]
-            # -> at epsilonX[1] epsilon will reach epsilonY[1] and stay there
-            puzzle.ai.epsilon = (epsilonY[0] if relevantAge < epsilonX[0] else
-                                 epsilonY[1] if relevantAge > epsilonX[1] else
-                                 epsilonM * (relevantAge - epsilonX[0]) + epsilonY[0])
-            # alternatively just multiply by some factor... harder to set right I guess
-            # puzzle.ai.epsilon *= 0.9995
-        elif puzzle.solved < 0:
-            firstVictoryAge = puzzle.age + 1
+        if algorithm != 2:
+            # every 100 time steps, decay epsilon (only after first puzzle is solved)
+            if (puzzle.solved > 0) & (puzzle.age % 100 == 0):
+                relevantAge = puzzle.age - firstVictoryAge
+                # this gradually decreases epsilon from epsilonY[0] to epsilonY[1] over the course of epsilonX[0] to [1]
+                # -> at epsilonX[1] epsilon will reach epsilonY[1] and stay there
+                puzzle.ai.epsilon = (epsilonY[0] if relevantAge < epsilonX[0] else
+                                     epsilonY[1] if relevantAge > epsilonX[1] else
+                                     epsilonM * (relevantAge - epsilonX[0]) + epsilonY[0])
+                # alternatively just multiply by some factor... harder to set right I guess
+                # puzzle.ai.epsilon *= 0.9995
+            elif puzzle.solved < 0:
+                firstVictoryAge = puzzle.age + 1
 
         # every .. steps show current averageStepsPerPuzzle and stuff and then reset stats to measure next ... steps
         if puzzle.age % 100000 == 0:
             print("\nage: " + str(puzzle.age))
-            print("epsilon: " + str(puzzle.ai.epsilon))
+            if algorithm != 2:
+                print("epsilon: " + str(puzzle.ai.epsilon))
             print(datetime.now())
             #print("manhattan: " + str(puzzle.getManhattanDistance(puzzle.state, puzzle.solution)))
 
