@@ -29,7 +29,9 @@ class QLearn:
         state = self.transform_state(state)
         return self.lgbm.act(state)
 
-    def learn(self, state, action, reward, newstate, is_solved, _):
+    def learn(self, state, action, reward, newstate, is_solved, has_moved):
+        if not has_moved:
+            return
         state = self.transform_state(state)
         newstate = self.transform_state(newstate)
         self.lgbm.remember(state, action, reward, newstate, is_solved)
