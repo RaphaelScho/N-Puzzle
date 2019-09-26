@@ -33,7 +33,7 @@ class Solver:
         self.memory = deque(maxlen=MEMORY_SIZE)
         self.last_memory = deque(maxlen=TEMP_MEMORY_SIZE)
 
-        self.model = MultiOutputRegressor(LGBMRegressor(n_estimators=200, n_jobs=-1, learning_rate=0.2))
+        self.model = MultiOutputRegressor(LGBMRegressor(n_estimators=50, n_jobs=-1, learning_rate=0.2))
         self.isFit = False
 
         #self.alpha = alpha
