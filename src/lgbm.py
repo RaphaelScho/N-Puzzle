@@ -15,14 +15,13 @@ from lightgbm import LGBMRegressor
 #LEARNING_RATE = 0.001
 
 #MEMORY_SIZE = 1000
-MEMORY_SIZE = 5000
-TEMP_MEMORY_SIZE = 100
-#BATCH_SIZE = 20
-BATCH_SIZE = 200
+MEMORY_SIZE = 10000
+TEMP_MEMORY_SIZE = 200
+MIN_BATCH_SIZE = 20
 
 EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.05
-EXPLORATION_DECAY = 0.96
+EXPLORATION_DECAY = 0.975
 
 
 class Solver:
@@ -34,7 +33,7 @@ class Solver:
         self.memory = deque(maxlen=MEMORY_SIZE)
         self.last_memory = deque(maxlen=TEMP_MEMORY_SIZE)
 
-        self.model = MultiOutputRegressor(LGBMRegressor(n_estimators=1000, n_jobs=-1))
+        self.model = MultiOutputRegressor(LGBMRegressor(n_estimators=200, n_jobs=-1, learning_rate=0.2))
         self.isFit = False
 
         #self.alpha = alpha
@@ -58,7 +57,7 @@ class Solver:
     def experience_replay(self):
         self.memory.extend(self.last_memory)
         self.last_memory.clear()
-        if len(self.memory) < BATCH_SIZE:
+        if len(self.memory) < MIN_BATCH_SIZE:
             return
         batch = random.sample(self.memory, int(len(self.memory) / 1))
         X = []

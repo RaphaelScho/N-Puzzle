@@ -35,3 +35,6 @@ class QLearn:
         self.lgbm.remember(state, action, reward, newstate, is_solved)
         if is_solved:
             self.lgbm.experience_replay()
+
+    def get_exploration_rate(self):
+        return self.lgbm.exploration_rate

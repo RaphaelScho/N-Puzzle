@@ -283,16 +283,16 @@ class Puzzle():
                 file.write(("%f,%f,%d,%f,%d,%f,%d\n"
                             % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
                                self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
-            else: #TODO get epsilon?
+            else:
                 print((
-                        "\navg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \tactions: %d \tsolved: %d"
+                        "\navg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \tactions: %d \t\tepsilon: %f \tsolved: %d"
                         % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
-                           self.movesDone, timeDif, self.actionsTaken, self.solved)).expandtabs(
+                           self.movesDone, timeDif, self.actionsTaken, self.ai.get_exploration_rate(), self.solved)).expandtabs(
                     18))
                 print(datetime.now())
-                file.write(("%f,%f,%d,%f,%d,%d\n"
+                file.write(("%f,%f,%d,%f,%d, %f, %d\n"
                             % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
-                               self.movesDone, timeDif, self.actionsTaken, self.solved)).expandtabs(
+                               self.movesDone, timeDif, self.actionsTaken, self.ai.get_exploration_rate(), self.solved)).expandtabs(
                     18))
 
             self.movesDone = 0
@@ -419,6 +419,8 @@ with open(fname,"w+") as file:
             print("\nage: " + str(puzzle.age))
             if algorithm != 2:
                 print("epsilon: " + str(puzzle.ai.epsilon))
+            else:
+                print("epsilon: " + str(puzzle.ai.get_exploration_rate()))
             print(datetime.now())
             #print("manhattan: " + str(puzzle.getManhattanDistance(puzzle.state, puzzle.solution)))
 
