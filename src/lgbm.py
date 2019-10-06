@@ -15,13 +15,13 @@ from lightgbm import LGBMRegressor
 #LEARNING_RATE = 0.001
 
 #MEMORY_SIZE = 1000
-MEMORY_SIZE = 10000
-TEMP_MEMORY_SIZE = 200
+MEMORY_SIZE = 15000
+TEMP_MEMORY_SIZE = 1000
 MIN_BATCH_SIZE = 20
 
 EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.05
-EXPLORATION_DECAY = 0.975
+EXPLORATION_DECAY = 0.98
 
 
 class Solver:
@@ -33,7 +33,7 @@ class Solver:
         self.memory = deque(maxlen=MEMORY_SIZE)
         self.last_memory = deque(maxlen=TEMP_MEMORY_SIZE)
 
-        self.model = MultiOutputRegressor(LGBMRegressor(n_estimators=50, n_jobs=-1, learning_rate=0.2))
+        self.model = MultiOutputRegressor(LGBMRegressor(n_estimators=300, num_leaves=35, max_depth=5, subsample_for_bin = round(MEMORY_SIZE * 0.5), n_jobs=-1, learning_rate=0.1))
         self.isFit = False
 
         #self.alpha = alpha
