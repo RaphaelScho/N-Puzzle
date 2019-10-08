@@ -7,7 +7,6 @@ class QLearn:
 
         self.puzzleSize = puzzleSize
         self.actionsSize = puzzleSize ** 2
-        self.actions = range(self.actionsSize)
         self.inputSize = self.actionsSize ** 2
 
         self.lgbm = lgbm.Solver(self.actionsSize, alpha, gamma)
@@ -30,8 +29,8 @@ class QLearn:
         return self.lgbm.act(state)
 
     def learn(self, state, action, reward, newstate, is_solved, has_moved):
-        if not has_moved:
-            return
+        #if not has_moved:
+        #    return
         state = self.transform_state(state)
         newstate = self.transform_state(newstate)
         self.lgbm.remember(state, action, reward, newstate, is_solved)
