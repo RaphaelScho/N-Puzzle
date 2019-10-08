@@ -283,6 +283,7 @@ class Puzzle():
                 file.write(("%f,%f,%d,%f,%d,%f,%d\n"
                             % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
                                self.movesDone, timeDif, self.actionsTaken, self.ai.epsilon, self.solved)).expandtabs(18))
+                file.flush()
             else:
                 print((
                         "\navg moves: %f \tavg time: %f seconds \tmoves: %d \ttime: %f seconds \tactions: %d \t\tepsilon: %f \tsolved: %d"
@@ -292,8 +293,9 @@ class Puzzle():
                 print(datetime.now())
                 file.write(("%f,%f,%d,%f,%d, %f, %d\n"
                             % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
-                               self.movesDone, timeDif, self.actionsTaken, self.ai.get_exploration_rate(), self.solved)).expandtabs(
+                               self.movesDone, timeDif, self.actionsTaken, 0.0000002, self.solved)).expandtabs(
                     18))
+                file.flush()
 
             self.movesDone = 0
             self.actionsTaken = 0
