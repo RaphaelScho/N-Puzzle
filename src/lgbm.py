@@ -2,6 +2,7 @@ import random
 #import gym
 import numpy as np
 from collections import deque
+import copy
 
 from sklearn.multioutput import MultiOutputRegressor
 from lightgbm import LGBMRegressor
@@ -17,7 +18,7 @@ from lightgbm import LGBMRegressor
 #MEMORY_SIZE = 1000
 MEMORY_SIZE = 15000
 TEMP_MEMORY_SIZE = 1000
-MIN_BATCH_SIZE = 20
+MIN_BATCH_SIZE = 200
 
 EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.05
@@ -26,14 +27,23 @@ EXPLORATION_DECAY = 0.98
 
 class Solver:
 
-    def __init__(self, action_space, alpha, gamma):
+    def __init__(self, action_size, alpha, gamma):
         #self.exploration_rate = epsilon
 
-        self.action_space = action_space
+        self.action_size = action_size
         self.memory = deque(maxlen=MEMORY_SIZE)
         self.last_memory = deque(maxlen=TEMP_MEMORY_SIZE)
 
-        self.model = MultiOutputRegressor(LGBMRegressor(n_estimators=300, num_leaves=35, max_depth=5, subsample_for_bin = round(MEMORY_SIZE * 0.5), n_jobs=-1, learning_rate=0.1))
+
+        self.actions = range(self.action_size)
+
+        # create one nn per action:
+        self.models = {}
+        for action in self.actions:
+            model = LGBMRegressor(n_estimators=80, max_depth=2, subsample_for_bin = MEMORY_SIZE, n_jobs=-1, learning_rate=0.1)
+            self.models[action] = copy.copy(model)
+
+        #self.model = LGBMRegressor(n_estimators=100, num_leaves=35, max_depth=5, subsample_for_bin = round(MEMORY_SIZE * 0.3), n_jobs=-1, learning_rate=0.1)
         self.isFit = False
 
         #self.alpha = alpha
@@ -47,12 +57,16 @@ class Solver:
 
     def act(self, state):
         if np.random.rand() < self.exploration_rate:
-            return random.randrange(self.action_space)
-        if self.isFit == True:
-            q_values = self.model.predict(state.reshape(1,-1))
+            return random.randrange(self.action_size)
+        if self.isFit:
+            q_values = []
+            for action in range(self.action_size):
+                q_value = self.models[action].predict(state.reshape(1,-1))[0]
+                q_values.append(q_value)
+            #q_values = self.model.predict(state.reshape(1,-1))
         else:
-            q_values = np.zeros(self.action_space).reshape(1, -1)
-        return np.argmax(q_values[0])
+            q_values = np.zeros(self.action_size).reshape(1, -1)[0]
+        return np.argmax(q_values)
 
     def experience_replay(self):
         self.memory.extend(self.last_memory)
@@ -60,26 +74,26 @@ class Solver:
         if len(self.memory) < MIN_BATCH_SIZE:
             return
         batch = random.sample(self.memory, int(len(self.memory) / 1))
-        X = []
-        targets = []
+        X = {}
+        targets = {}
+        for action in range(self.action_size):
+            targets[action] = []
+            X[action] = []
         for state, action, reward, state_next, terminal in batch:
             q_update = reward
             if not terminal:
                 if self.isFit:
-                    #q_update = (reward + self.gamma * np.amax(self.model.predict(state_next)[0]))
-                    q_update = (reward + self.gamma * np.amax(self.model.predict(state_next.reshape(1,-1))))
+                    q_values = []
+                    for act in range(self.action_size):
+                        q_values.append(reward + self.gamma * np.amax(self.models[act].predict(state_next.reshape(1,-1))))
+                    q_update = np.max(q_values)
                 else:
                     q_update = reward
-            if self.isFit:
-                q_values = self.model.predict(state.reshape(1,-1))
-            else:
-                q_values = np.zeros(self.action_space).reshape(1, -1)
-            q_values[0][action] = q_update
 
-            #X.append(list(state[0]))
-            X.append(list(state))
-            targets.append(q_values[0])
-        self.model.fit(X, targets)
+            X[action].append(list(state))
+            targets[action].append(q_update)
+        for action in range(self.action_size):
+            self.models[action].fit(X[action], targets[action])
         self.isFit = True
         self.exploration_rate *= EXPLORATION_DECAY
         self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
