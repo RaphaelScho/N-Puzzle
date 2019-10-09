@@ -16,13 +16,13 @@ from lightgbm import LGBMRegressor
 #LEARNING_RATE = 0.001
 
 #MEMORY_SIZE = 1000
-MEMORY_SIZE = 1000
-TEMP_MEMORY_SIZE = 100
+MEMORY_SIZE = 2550
+TEMP_MEMORY_SIZE = 200
 MIN_BATCH_SIZE = 500
 
 EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.05
-EXPLORATION_DECAY = 0.97
+EXPLORATION_DECAY = 0.99
 
 
 class Solver:
@@ -40,7 +40,7 @@ class Solver:
         # create one nn per action:
         self.models = {}
         for action in self.actions:
-            model = LGBMRegressor(n_estimators=200, max_depth=8, num_leaves=2^8, subsample_for_bin = MEMORY_SIZE, n_jobs=-1, learning_rate=0.1, min_split_gain=0.01)
+            model = LGBMRegressor(n_estimators=200, max_depth=20, num_leaves=2^20, subsample_for_bin = MEMORY_SIZE, n_jobs=-1, learning_rate=0.05, min_split_gain=0.01)
             self.models[action] = copy.copy(model)
 
         #self.model = LGBMRegressor(n_estimators=100, num_leaves=35, max_depth=5, subsample_for_bin = round(MEMORY_SIZE * 0.3), n_jobs=-1, learning_rate=0.1)
