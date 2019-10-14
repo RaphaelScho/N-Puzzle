@@ -148,16 +148,16 @@ class Puzzle():
                 n = []
                 # space to the left
                 if (x - 1 >= 0):
-                    n.append((x - 1, y))
+                    n.append([x - 1, y])
                 # space to the right
                 if (x + 1 < self.puzzleSize):
-                    n.append((x + 1, y))
+                    n.append([x + 1, y])
                 # space above
                 if (y - 1 >= 0):
-                    n.append((x, y - 1))
+                    n.append([x, y - 1])
                 # space below
                 if (y + 1 < self.puzzleSize):
-                    n.append((x, y + 1))
+                    n.append([x, y + 1])
                 neighbours[pos] = n
                 pos += 1
 
@@ -167,7 +167,7 @@ class Puzzle():
         conv = []
         for y in range(0, self.puzzleSize):
             for x in range(0, self.puzzleSize):
-                conv.append((x, y))
+                conv.append([x, y])
         return conv
 
     def initSolvedPosition(self):
@@ -184,7 +184,7 @@ class Puzzle():
         for x in range(0, self.puzzleSize):
             for y in range(0, self.puzzleSize):
                 if (self.state[y][x] == 0):
-                    return (x, y)
+                    return [x, y]
 
     # try to move the tile at position
     # if that move is possible, move and return True
