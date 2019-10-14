@@ -16,13 +16,13 @@ from lightgbm import LGBMRegressor
 #LEARNING_RATE = 0.001
 
 #MEMORY_SIZE = 1000
-MEMORY_SIZE = 2550
-TEMP_MEMORY_SIZE = 200
+MEMORY_SIZE = 2500
+TEMP_MEMORY_SIZE = 300
 MIN_BATCH_SIZE = 500
 
 EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.05
-EXPLORATION_DECAY = 0.99
+EXPLORATION_DECAY = 0.985
 
 
 class Solver:
@@ -34,13 +34,12 @@ class Solver:
         self.memory = deque(maxlen=MEMORY_SIZE)
         self.last_memory = deque(maxlen=TEMP_MEMORY_SIZE)
 
-
         self.actions = range(self.action_size)
 
         # create one nn per action:
         self.models = {}
         for action in self.actions:
-            model = LGBMRegressor(n_estimators=200, max_depth=20, num_leaves=2^20, subsample_for_bin = MEMORY_SIZE, n_jobs=-1, learning_rate=0.05, min_split_gain=0.01)
+            model = LGBMRegressor(n_estimators=200, max_depth=20, num_leaves=2^20, subsample_for_bin = MEMORY_SIZE, n_jobs=-1, learning_rate=0.05, min_split_gain=0.04)
             self.models[action] = copy.copy(model)
 
         #self.model = LGBMRegressor(n_estimators=100, num_leaves=35, max_depth=5, subsample_for_bin = round(MEMORY_SIZE * 0.3), n_jobs=-1, learning_rate=0.1)
@@ -50,6 +49,7 @@ class Solver:
         self.gamma = gamma
 
         self.exploration_rate = EXPLORATION_MAX
+        self.mem_count = 0
 
     def remember(self, state, action, reward, next_state, done):
         self.last_memory.append((state, action, reward, next_state, done))
@@ -69,7 +69,14 @@ class Solver:
         return np.argmax(q_values)
 
     def experience_replay(self):
+        # size = len(self.memory)
         self.memory.extend(self.last_memory)
+        self.mem_count += len(self.last_memory)
+        if self.mem_count > MEMORY_SIZE:
+            print("-------------------------------------")
+            print("Max memory size reached (" + str(MEMORY_SIZE) + ")")
+            print("-------------------------------------")
+            self.mem_count = 0
         self.last_memory.clear()
         if len(self.memory) < MIN_BATCH_SIZE:
             return
