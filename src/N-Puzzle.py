@@ -4,6 +4,7 @@ import puzzleRandomizer
 from datetime import datetime
 from copy import deepcopy
 import itertools
+import numpy as np
 
 
 # ------------------------------------------------------------ #
@@ -11,7 +12,7 @@ import itertools
 
 
 algorithm = 2       # use  dictionary (0), neural network (1) or lgbm regressor (2)
-puzzleSize = 3      # Size 3 means 3x3 puzzle
+puzzleSize = 2      # Size 3 means 3x3 puzzle
 
 
 # ------------------------------------------------------------ #
@@ -114,6 +115,8 @@ class Puzzle():
         self.state = self.randomizer.makeRandomPuzzle(self.solved)
         # describes position of the empty cell (value = 0) (x,y)
         self.emptyCellPos = self.initEmptyCellPos()
+        # up, down, left, right
+        self.direction_list = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         # create dict of cells in the puzzle that are neighbours to each other
         self.neighbours = self.initNeighbours()
         # create dict to get 2d-positions from 1d-position: (x,y)
@@ -167,7 +170,7 @@ class Puzzle():
         conv = []
         for y in range(0, self.puzzleSize):
             for x in range(0, self.puzzleSize):
-                conv.append([x, y])
+                conv.append(np.array([x, y]))
         return conv
 
     def initSolvedPosition(self):
@@ -184,33 +187,37 @@ class Puzzle():
         for x in range(0, self.puzzleSize):
             for y in range(0, self.puzzleSize):
                 if (self.state[y][x] == 0):
-                    return [x, y]
+                    return np.array([x, y])
 
     # try to move the tile at position
     # if that move is possible, move and return True
     # else do not move and return False
-    def moveTile(self, position):
+    def moveTile(self, direction):
 
         self.age += 1
         self.actionsTaken += 1
 
         # if the cell at position has the empty cell as a neighbour -> swap it with the empty cell and return True
-        if self.emptyCellPos in self.neighbours[position]:
-            curPosTuple = self.positionConverter[position]
-            curPosX = curPosTuple[0]
-            curPosY = curPosTuple[1]
-            curPosValue = self.state[curPosY][curPosX]
+        #if self.emptyCellPos in self.neighbours[position]:
+        # print(self.emptyCellPos)
+        # print(self.direction_list[direction])
+        newPos = self.emptyCellPos + self.direction_list[direction]
+        if not (np.sum(newPos >= self.puzzleSize) or np.sum(newPos < 0)):
+            # curPos = self.positionConverter[direction]
+            newPosX = newPos[0]
+            newPosY = newPos[1]
+            newPosValue = self.state[newPosY][newPosX]
 
-            emptyCellPosTuple = self.emptyCellPos
-            empPosX = emptyCellPosTuple[0]
-            empPosY = emptyCellPosTuple[1]
+            emptyCellPos = self.emptyCellPos
+            emptyPosX = emptyCellPos[0]
+            emptyPosY = emptyCellPos[1]
 
             # swap values in self.state
-            self.state[empPosY][empPosX] = curPosValue
-            self.state[curPosY][curPosX] = 0
+            self.state[emptyPosY][emptyPosX] = newPosValue
+            self.state[newPosY][newPosX] = 0
 
             # set new emptyCellPos
-            self.emptyCellPos = curPosTuple
+            self.emptyCellPos = newPos
 
             self.movesDone += 1
             return True

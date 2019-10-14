@@ -16,9 +16,9 @@ from lightgbm import LGBMRegressor
 #LEARNING_RATE = 0.001
 
 #MEMORY_SIZE = 1000
-MEMORY_SIZE = 2500
-TEMP_MEMORY_SIZE = 300
-MIN_BATCH_SIZE = 500
+# selfMEMORY_SIZE = 2500
+# selfTEMP_MEMORY_SIZE = 300
+# selfMIN_BATCH_SIZE = 500
 
 EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.05
@@ -27,19 +27,33 @@ EXPLORATION_DECAY = 0.985
 
 class Solver:
 
-    def __init__(self, action_size, alpha, gamma):
+    def __init__(self, puzzle_size, alpha, gamma):
         #self.exploration_rate = epsilon
 
-        self.action_size = action_size
-        self.memory = deque(maxlen=MEMORY_SIZE)
-        self.last_memory = deque(maxlen=TEMP_MEMORY_SIZE)
+        if puzzle_size == 2:
+            self.MEMORY_SIZE = 1550
+            self.TEMP_MEMORY_SIZE = 50
+            self.MIN_BATCH_SIZE = 1550
+            max_depth = 9
+            n_estimators = 50
+        #elif puzzle_size == 3:
+        else:
+            self.MEMORY_SIZE = 5500
+            self.TEMP_MEMORY_SIZE = 300
+            self.MIN_BATCH_SIZE = 5500
+            max_depth = 20
+            n_estimators = 200
 
-        self.actions = range(self.action_size)
+        self.action_size = puzzle_size ** 2
+        self.memory = deque(maxlen=self.MEMORY_SIZE)
+        self.last_memory = deque(maxlen=self.TEMP_MEMORY_SIZE)
+
+        self.actions = range(4)
 
         # create one nn per action:
         self.models = {}
         for action in self.actions:
-            model = LGBMRegressor(n_estimators=200, max_depth=20, num_leaves=2^20, subsample_for_bin = MEMORY_SIZE, n_jobs=-1, learning_rate=0.05, min_split_gain=0.04)
+            model = LGBMRegressor(n_estimators=n_estimators, max_depth=max_depth, num_leaves=2^max_depth, subsample_for_bin = self.MEMORY_SIZE, n_jobs=-1, learning_rate=0.05, min_split_gain=0.04)
             self.models[action] = copy.copy(model)
 
         #self.model = LGBMRegressor(n_estimators=100, num_leaves=35, max_depth=5, subsample_for_bin = round(MEMORY_SIZE * 0.3), n_jobs=-1, learning_rate=0.1)
@@ -60,7 +74,7 @@ class Solver:
             return random.randrange(self.action_size)
         if self.isFit:
             q_values = []
-            for action in range(self.action_size):
+            for action in self.actions:
                 q_value = self.models[action].predict(state.reshape(1,-1))[0]
                 q_values.append(q_value)
             #q_values = self.model.predict(state.reshape(1,-1))
@@ -72,13 +86,13 @@ class Solver:
         # size = len(self.memory)
         self.memory.extend(self.last_memory)
         self.mem_count += len(self.last_memory)
-        if self.mem_count > MEMORY_SIZE:
+        if self.mem_count > self.MEMORY_SIZE:
             print("-------------------------------------")
-            print("Max memory size reached (" + str(MEMORY_SIZE) + ")")
+            print("Max memory size reached (" + str(self.MEMORY_SIZE) + ")")
             print("-------------------------------------")
             self.mem_count = 0
         self.last_memory.clear()
-        if len(self.memory) < MIN_BATCH_SIZE:
+        if len(self.memory) < self.MIN_BATCH_SIZE:
             return
         batch = random.sample(self.memory, int(len(self.memory) / 1))
         X = {}

@@ -9,7 +9,7 @@ class QLearn:
         self.actionsSize = puzzleSize ** 2
         self.inputSize = self.actionsSize ** 2
 
-        self.lgbm = lgbm.Solver(self.actionsSize, alpha, gamma)
+        self.lgbm = lgbm.Solver(self.puzzleSize, alpha, gamma)
 
     # transform state representation using numbers from 0 to N^2-1 to representation using a vector on length N^2
     # for each cell: for N = 2 solution state [[1,2],[3,0]] looks like [[[0,1,0,0],[0,0,1,0]],[[0,0,0,1],[1,0,0,0]]]

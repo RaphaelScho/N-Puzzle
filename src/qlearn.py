@@ -14,7 +14,8 @@ class QLearn:
         # at 1 infinite rewards possible -> dont go to 1)
         self.gamma = gamma
 
-        self.actions = range(puzzleSize ** 2)
+        #self.actions = range(puzzleSize ** 2)
+        self.actions = range(4)
 
         if puzzleSize == 2:
             self.batchMaxSize = 10

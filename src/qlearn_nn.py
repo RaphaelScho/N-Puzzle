@@ -17,7 +17,7 @@ class QLearn:
 
         self.puzzleSize = puzzleSize
         self.actionsSize = puzzleSize**2
-        self.actions = range(self.actionsSize)
+        self.actions = range(4)
         self.inputSize = self.actionsSize**2
 
         # create one nn per action:
