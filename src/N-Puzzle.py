@@ -125,7 +125,7 @@ class Puzzle():
         self.solveCount = 0
         self.totalMoves = 0
         self.totalTime = 0
-
+        self.steps = 0
 
         #self.currentManhattan = self.getManhattanDistance(self.state, self.solution)
         #self.lastManhattan = self.currentManhattan
@@ -257,6 +257,8 @@ class Puzzle():
             self.state = self.randomizer.makeRandomPuzzle(self.solved)
             self.emptyCellPos = self.initEmptyCellPos()
 
+            self.steps = 0
+
             endTime = datetime.now()
             totalTime = endTime - self.startTime
 
@@ -318,6 +320,29 @@ class Puzzle():
 
         # move chosen tile, if it can not be moved do nothing
         self.moveTile(action)
+        self.steps += 1
+
+        if self.steps > 2000:
+            print("resetting..")
+            self.lastState = None
+            self.state = self.randomizer.makeRandomPuzzle(self.solved)
+            self.emptyCellPos = self.initEmptyCellPos()
+            self.steps = 0
+
+            #endTime = datetime.now()
+            #totalTime = endTime - self.startTime
+            # calculate time difference
+            #timeDif = totalTime.seconds + 1.0 * totalTime.microseconds / 1000 / 1000
+            #self.totalTime += timeDif
+            #self.totalMoves += self.movesDone
+            #self.movesDone = 0
+            #self.actionsTaken = 0
+            #self.startTime = datetime.now()
+
+            if algorithm==2:
+                self.ai.lgbm.last_memory.clear()
+
+            return
 
     def isPuzzleSolved(self):
         return (self.state == self.solution)
