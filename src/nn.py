@@ -15,7 +15,7 @@ class nn:
             self.hiddenLayerSize = round(self.inputSize / 2)
         if puzzleSize == 3:
             self.hiddenLayerSize = round(self.inputSize / 1)
-            self.hiddenLayerSize2 = round(self.inputSize / 2)
+            self.hiddenLayerSize2 = round(self.inputSize / 1)
 
         tf.reset_default_graph()
 

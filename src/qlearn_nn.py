@@ -2,6 +2,7 @@ import random
 import numpy as np
 import nn
 import copy
+from collections import deque
 
 
 class QLearn:
@@ -28,21 +29,22 @@ class QLearn:
 
         if puzzleSize == 2:
             self.batchMaxSize = 50
-            self.moveBatchMaxSize = 10
-            self.learningSteps = 20
-            self.learnSize = 10
+            #self.moveBatchMaxSize = 10
+            # self.learningSteps = 20
+            # self.learnSize = 10
         if puzzleSize == 3:
-            self.batchMaxSize = 450  # how many [state,action,reward,newstate] tuples to remember
-            self.moveBatchMaxSize = 50 # how many tuples to remember where a change in the boardstate happened
-            self.learningSteps = 200  # after how many actions should a batch be learned
-            self.learnSize = 20  # how many of those tuples to randomly choose when learning
+            self.batchMaxSize = 10002  # how many [state,action,reward,newstate] tuples to remember
+            #self.moveBatchMaxSize = 50 # how many tuples to remember where a change in the boardstate happened
+            # self.learningSteps = 200  # after how many actions should a batch be learned
+            # self.learnSize = 20  # how many of those tuples to randomly choose when learning
 
         self.age = 0
-        self.batch = []
-        self.batchSize = 0
-        self.moveBatch = []
-        self.moveBatchSize = 0
-        self.winBatch = []
+        self.batch = deque(maxlen=self.batchMaxSize)
+        # self.batchSize = 0
+        self.mem_count = 0
+        #self.moveBatch = []
+        #self.moveBatchSize = 0
+        #self.winBatch = []
         #self.chosenActions = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0}
 
     # transform state representation using numbers from 0 to N^2-1 to representation using a vector on length N^2
@@ -148,20 +150,27 @@ class QLearn:
     #             self.doLearning(b[0], b[1], b[2], b[3])
 
     def learn(self, state, action, reward, newstate, isSolved, hasMoved):
+        if not hasMoved:
+            if random.random() > 0.01:
+                return # ignore 99% of non moves for learning
         oneD_state = self.transformState(state)
+        self.mem_count += 1
         if newstate is not None:
             oneD_newstate = self.transformState(newstate)
         else:
             oneD_newstate = None
 
-        if self.batchSize >= self.batchMaxSize:
-            self.batch.pop(0)
-        else:
-            self.batchSize += 1
+        # if self.batchSize >= self.batchMaxSize:
+        #     self.batch.pop(0)
+        # else:
+        #     self.batchSize += 1
         self.batch.append([oneD_state, action, reward, oneD_newstate])
 
         if isSolved:
-            chosenBatch = self.batch[::-1]
+            chosenBatch = list(self.batch)[::-1]
+            # higher lr when learning from successful batch
+            lr = self.alpha
+            self.alpha = lr * 10
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
                 # if b[3] is not None:
@@ -170,10 +179,15 @@ class QLearn:
                 # else:
                 #     maxqnew = None
                 self.doLearning(b[0], b[1], b[2], b[3])
-            self.batch=[]
-            self.batchSize=0
-        elif self.age % self.batchMaxSize == 0:
-            chosenBatch = self.batch[::-1]
+            self.alpha = lr
+            # self.batch=[]
+            # self.batchSize=0
+        # elif self.age % self.batchMaxSize == 0:
+        elif self.mem_count >= self.batchMaxSize:
+            print("-------------------------------------")
+            print("Max memory size reached (" + str(self.batchMaxSize) + ") -> learning")
+            print("-------------------------------------")
+            chosenBatch = list(self.batch)[::-1]
             for i in range(len(chosenBatch)):
                 b = chosenBatch[i]
                 # if b[3] is not None:
@@ -182,6 +196,8 @@ class QLearn:
                 # else:
                 #     maxqnew = None
                 self.doLearning(b[0], b[1], b[2], b[3])
+            self.mem_count = 0
+            self.batch.clear()
             #self.doLearning(oneD_state, action, reward, oneD_newstate)
 
     # returns the best action based on knowledge in nn
