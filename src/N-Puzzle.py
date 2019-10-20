@@ -1,4 +1,5 @@
 import math
+import random
 
 import puzzleRandomizer
 from datetime import datetime
@@ -11,8 +12,8 @@ import numpy as np
 # ------------------ SET PUZZLE SIZE HERE -------------------- #
 
 
-algorithm = 2       # use  dictionary (0), neural network (1) or lgbm regressor (2)
-puzzleSize = 2      # Size 3 means 3x3 puzzle
+algorithm = 1       # use  dictionary (0), neural network (1) or lgbm regressor (2)
+puzzleSize = 3      # Size 3 means 3x3 puzzle
 
 
 # ------------------------------------------------------------ #
@@ -56,17 +57,17 @@ elif algorithm == 1:
         punishVal = -1  # punishment for doing nothing
 
     elif puzzleSize == 3:  # hardest instance takes 31 moves to solve
-        epsilonSteps = 10500000
-        epsilonStartVal = 0.25
+        epsilonSteps = 18500000
+        epsilonStartVal = 0.9
         epsilonEndVal = 0.01
         alphaVal = 0.0001
-        gammaVal = 0.999
-        rewardVal = 100
+        gammaVal = 0.95
+        rewardVal = 10
         punishVal = -1
 elif algorithm == 2: # TODO untested values
     if puzzleSize == 2: # hardest instance takes 8 (?) moves
         epsilonSteps = 5000  # over how many steps epsilon is reduced to its final value
-        epsilonStartVal = 1  # chance to take a random action
+        epsilonStartVal = 0.3  # chance to take a random action
         epsilonEndVal = 0.05
         alphaVal = 0.01  # learning rate
         gammaVal = 0.99  # discount factor for future rewards
@@ -75,7 +76,7 @@ elif algorithm == 2: # TODO untested values
 
     elif puzzleSize == 3:  # hardest instance takes 31 moves to solve
         #epsilonSteps = 100000
-        epsilonStartVal = None #1
+        epsilonStartVal = 1
         epsilonEndVal = None #0.05
         alphaVal = 0.01
         gammaVal = 0.99
@@ -250,6 +251,8 @@ class Puzzle():
 
         # observe the reward and update the Q-value
         else:
+            endTime = datetime.now()
+
             reward = rewardVal
             if self.lastState is not None:
                 if algorithm == 2:
@@ -266,7 +269,6 @@ class Puzzle():
 
             self.steps = 0
 
-            endTime = datetime.now()
             totalTime = endTime - self.startTime
 
             # calculate time difference
@@ -329,7 +331,7 @@ class Puzzle():
         self.moveTile(action)
         self.steps += 1
 
-        if self.steps > 2000:
+        if self.steps > 10000:
             print("resetting..")
             self.lastState = None
             self.state = self.randomizer.makeRandomPuzzle(self.solved)
@@ -348,6 +350,10 @@ class Puzzle():
 
             if algorithm==2:
                 self.ai.lgbm.last_memory.clear()
+            elif algorithm==1:
+                if random.random() > 0.05:
+                    self.ai.batch.clear()
+                    self.ai.mem_count = 0
 
             return
 
