@@ -20,14 +20,14 @@ from lightgbm import LGBMRegressor
 # selfTEMP_MEMORY_SIZE = 300
 # selfMIN_BATCH_SIZE = 500
 
-EXPLORATION_MAX = 1.0
+#selfEXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.05
 EXPLORATION_DECAY = 0.985
 
 
 class Solver:
 
-    def __init__(self, puzzle_size, alpha, gamma):
+    def __init__(self, puzzle_size, epsilon, alpha, gamma):
         #self.exploration_rate = epsilon
 
         if puzzle_size == 2:
@@ -36,15 +36,17 @@ class Solver:
             self.MIN_BATCH_SIZE = 1550
             max_depth = 9
             n_estimators = 50
+            self.EXPLORATION_MAX = epsilon
         #elif puzzle_size == 3:
         else:
             self.MEMORY_SIZE = 5500
-            self.TEMP_MEMORY_SIZE = 300
-            self.MIN_BATCH_SIZE = 5500
+            self.TEMP_MEMORY_SIZE = 1000
+            self.MIN_BATCH_SIZE = 500
             max_depth = 20
             n_estimators = 200
+            self.EXPLORATION_MAX = epsilon
 
-        self.action_size = puzzle_size ** 2
+        #self.action_size = puzzle_size ** 2
         self.memory = deque(maxlen=self.MEMORY_SIZE)
         self.last_memory = deque(maxlen=self.TEMP_MEMORY_SIZE)
 
@@ -62,7 +64,7 @@ class Solver:
         #self.alpha = alpha
         self.gamma = gamma
 
-        self.exploration_rate = EXPLORATION_MAX
+        self.exploration_rate = self.EXPLORATION_MAX
         self.mem_count = 0
 
     def remember(self, state, action, reward, next_state, done):
@@ -71,7 +73,7 @@ class Solver:
 
     def act(self, state):
         if np.random.rand() < self.exploration_rate:
-            return random.randrange(self.action_size)
+            return random.randrange(len(self.actions))
         if self.isFit:
             q_values = []
             for action in self.actions:
@@ -79,7 +81,7 @@ class Solver:
                 q_values.append(q_value)
             #q_values = self.model.predict(state.reshape(1,-1))
         else:
-            q_values = np.zeros(self.action_size).reshape(1, -1)[0]
+            q_values = np.zeros(len(self.actions)).reshape(1, -1)[0]
         return np.argmax(q_values)
 
     def experience_replay(self):
@@ -97,7 +99,7 @@ class Solver:
         batch = random.sample(self.memory, int(len(self.memory) / 1))
         X = {}
         targets = {}
-        for action in range(self.action_size):
+        for action in self.actions:
             targets[action] = []
             X[action] = []
         for state, action, reward, state_next, terminal in batch:
@@ -105,7 +107,7 @@ class Solver:
             if not terminal:
                 if self.isFit:
                     q_values = []
-                    for act in range(self.action_size):
+                    for act in self.actions:
                         q_values.append(reward + self.gamma * np.amax(self.models[act].predict(state_next.reshape(1,-1))))
                     q_update = np.max(q_values)
                 else:
@@ -113,7 +115,7 @@ class Solver:
 
             X[action].append(list(state))
             targets[action].append(q_update)
-        for action in range(self.action_size):
+        for action in self.actions:
             self.models[action].fit(X[action], targets[action])
         self.isFit = True
         self.exploration_rate *= EXPLORATION_DECAY
