@@ -33,18 +33,6 @@ class Randomizer():
             # print(self.boardParts)
         # print("fixed if broken: ", self.boardParts)
 
-        # TODO temp for bugfixing
-        # check if solvable
-        # boardText = ""
-        # for y in range(0, self.puzzleSize):
-        #     for x in range(0, self.puzzleSize):
-        #         boardText += str(self.boardParts[y][x]) + ","
-        # boardText = boardText[:-1]
-        # print(self.boardParts)
-        # print(boardText)
-        # b = solverBySomeGuy.Board(3, boardText)
-        # b.get_solution()
-
         return self.boardParts
         # initEmpty()
 
@@ -97,7 +85,7 @@ class Randomizer():
         # create puzzle in solved position
         self.createSolvedPosition()
         # randomise puzzle
-        if nSolved < 20:
+        if nSolved < 50:
             # make nSolved + 1 random moves to give easy puzzles at the beginning
             for i in range(nSolved + 1):
                 self.calcEmptyLoc()
