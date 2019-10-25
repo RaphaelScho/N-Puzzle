@@ -29,7 +29,7 @@ elif algorithm == 2:
     import qlearn_lgbm as learner
 
 if algorithm == 0:
-    if puzzleSize == 2:
+    if puzzleSize == 2: # hardest instance takes 5 moves
         epsilonSteps = 1000   # over how many steps epsilon is reduced to its final value
         epsilonStartVal = 0.05   # chance to take a random action
         epsilonEndVal = 0.001
@@ -47,38 +47,38 @@ if algorithm == 0:
         rewardVal = 1
         punishVal = -1
 elif algorithm == 1:
-    if puzzleSize == 2: # hardest instance takes 8 (?) moves
-        epsilonSteps = 50000  # over how many steps epsilon is reduced to its final value
-        epsilonStartVal = 0.20  # chance to take a random action
+    if puzzleSize == 2:
+        epsilonSteps = 50000
+        epsilonStartVal = 0.20
         epsilonEndVal = 0.01
-        alphaVal = 0.01  # learning rate
-        gammaVal = 0.99  # discount factor for future rewards
-        rewardVal = 1  # reward for solving the puzzle
-        punishVal = -1  # punishment for doing nothing
+        alphaVal = 0.01
+        gammaVal = 0.99
+        rewardVal = 1
+        punishVal = -1
 
-    elif puzzleSize == 3:  # hardest instance takes 31 moves to solve
-        epsilonSteps = 18500000
+    elif puzzleSize == 3:
+        epsilonSteps = 24500000
         epsilonStartVal = 0.9
         epsilonEndVal = 0.01
         alphaVal = 0.0001
         gammaVal = 0.95
         rewardVal = 10
         punishVal = -1
-elif algorithm == 2: # TODO untested values
-    if puzzleSize == 2: # hardest instance takes 8 (?) moves
-        epsilonSteps = 5000  # over how many steps epsilon is reduced to its final value
-        epsilonStartVal = 0.3  # chance to take a random action
-        epsilonEndVal = 0.05
-        alphaVal = 0.01  # learning rate
-        gammaVal = 0.99  # discount factor for future rewards
-        rewardVal = 1  # reward for solving the puzzle
-        punishVal = -1  # punishment for doing nothing
+elif algorithm == 2:
+    if puzzleSize == 2:
+        epsilonSteps = None
+        epsilonStartVal = 0.3
+        epsilonEndVal = None
+        alphaVal = 0.05
+        gammaVal = 0.99
+        rewardVal = 1
+        punishVal = -1
 
-    elif puzzleSize == 3:  # hardest instance takes 31 moves to solve
-        #epsilonSteps = 100000
+    elif puzzleSize == 3:
+        epsilonSteps = None
         epsilonStartVal = 1
-        epsilonEndVal = None #0.05
-        alphaVal = 0.01
+        epsilonEndVal = None
+        alphaVal = 0.05
         gammaVal = 0.99
         rewardVal = 100
         punishVal = -1
@@ -304,7 +304,7 @@ class Puzzle():
                 print(datetime.now())
                 file.write(("%f,%f,%d,%f,%d, %f, %d\n"
                             % (self.totalMoves / (self.solveCount * 1.0), self.totalTime / (self.solveCount * 1.0),
-                               self.movesDone, timeDif, self.actionsTaken, 0.0000002, self.solved)).expandtabs(
+                               self.movesDone, timeDif, self.actionsTaken, self.ai.get_exploration_rate(), self.solved)).expandtabs(
                     18))
                 file.flush()
 
@@ -351,7 +351,7 @@ class Puzzle():
             if algorithm==2:
                 self.ai.lgbm.last_memory.clear()
             elif algorithm==1:
-                if random.random() > 0.05:
+                if random.random() > 0.1:
                     self.ai.batch.clear()
                     self.ai.mem_count = 0
 

@@ -151,8 +151,8 @@ class QLearn:
 
     def learn(self, state, action, reward, newstate, isSolved, hasMoved):
         if not hasMoved:
-            if random.random() > 0.01:
-                return # ignore 99% of non moves for learning
+            if random.random() > 0.1:
+                return # ignore 90% of non moves for learning
         oneD_state = self.transformState(state)
         self.mem_count += 1
         if newstate is not None:

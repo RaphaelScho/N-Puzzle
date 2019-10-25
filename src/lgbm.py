@@ -55,7 +55,7 @@ class Solver:
         # create one nn per action:
         self.models = {}
         for action in self.actions:
-            model = LGBMRegressor(n_estimators=n_estimators, max_depth=max_depth, num_leaves=2^max_depth, subsample_for_bin = self.MEMORY_SIZE, n_jobs=-1, learning_rate=0.05, min_split_gain=0.04)
+            model = LGBMRegressor(n_estimators=n_estimators, max_depth=max_depth, num_leaves=2^max_depth, subsample_for_bin = self.MEMORY_SIZE, n_jobs=-1, learning_rate=alpha, min_split_gain=0.04)
             self.models[action] = copy.copy(model)
 
         #self.model = LGBMRegressor(n_estimators=100, num_leaves=35, max_depth=5, subsample_for_bin = round(MEMORY_SIZE * 0.3), n_jobs=-1, learning_rate=0.1)

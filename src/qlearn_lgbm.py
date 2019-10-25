@@ -3,7 +3,7 @@ import numpy as np
 
 
 class QLearn:
-    def __init__(self, puzzleSize, epsilon, alpha=0.2, gamma=0.9):
+    def __init__(self, puzzleSize, epsilon, alpha=0.5, gamma=0.9):
 
         self.puzzleSize = puzzleSize
         self.actionsSize = puzzleSize ** 2

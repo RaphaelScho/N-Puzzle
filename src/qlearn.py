@@ -26,7 +26,6 @@ class QLearn:
         self.batchSize = 0
         self.stepsSinceLastLearned = 0
 
-    # TODO does this cost too much time??
     # turns a state (list of lists) into a tuple of tuples so dict can handle it as a key
     def turnStateIntoTuple(self, state):
         return tuple(tuple(i) for i in state)
